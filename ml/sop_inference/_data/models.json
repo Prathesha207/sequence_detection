@@ -1,0 +1,76 @@
+[
+  {
+    "type": "yolo",
+    "name": "assembling_box_model (detect)",
+    "path": "weights/detectors/box_assembly_yolo_detect.pt",
+    "conf": 0.25,
+    "imgsz": 960,
+    "enabled": true,
+    "task": "detect",
+    "classes": [
+      "open_box",
+      "close_box",
+      "mouse",
+      "pen_marker",
+      "instruction_card"
+    ],
+    "use_for": "box assembly / packing a product box: open_box, close_box, mouse, pen_marker, instruction_card - BEST for the box SOP"
+  },
+  {
+    "type": "yolo",
+    "name": "best (segment)",
+    "path": "weights/detectors/packing_yolo_segment.pt",
+    "conf": 0.25,
+    "imgsz": 0,
+    "enabled": false,
+    "task": "segment",
+    "classes": [
+      "outer_box",
+      "box",
+      "tape",
+      "phone",
+      "sticker_place"
+    ],
+    "use_for": "phone packing into an outer box: outer_box, box, tape, phone, sticker_place - BEST for the packing SOP"
+  },
+  {
+    "type": "yolo",
+    "name": "assembling_moPdel_v2-2 (obb)",
+    "path": "weights/detectors/phone_assembly_yolo_obb.pt",
+    "conf": 0.25,
+    "imgsz": 0,
+    "enabled": false,
+    "task": "obb",
+    "classes": [
+      "Phone",
+      "Camera_module",
+      "Battery_pack",
+      "Motherboard",
+      "Back_cover",
+      "Speaker_module",
+      "Charging_port_module"
+    ],
+    "use_for": "phone assembly: phone, camera / battery / motherboard / speaker / charging port modules, back cover - BEST for the phone SOP"
+  },
+  {
+    "type": "yolo",
+    "name": "Dataset3_assemble_original (detect)",
+    "path": "weights/detectors/dataset3_truck_yolo_detect.pt",
+    "conf": 0.25,
+    "imgsz": 1280,
+    "enabled": false,
+    "task": "detect",
+    "classes": [
+      "cab",
+      "rear_body",
+      "truck",
+      "chassis",
+      "front_grille",
+      "wheel",
+      "side_panel",
+      "roof_light",
+      "screwdriver"
+    ],
+    "use_for": "toy truck assembly (Dataset3); also enabled in the shipped phone model"
+  }
+]

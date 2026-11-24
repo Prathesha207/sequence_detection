@@ -1,0 +1,244 @@
+{
+ "name": "Good_20Nov_1202",
+ "prompt": "An operator assembles a phone on the workbench. The phone chassis is already on the table. In order: 1. install the camera module into the chassis, 2. install the motherboard into the chassis, 3. install the battery pack into the battery bay, 4. install the charging port module at the bottom of the chassis, 5. install the speaker module into the lower chassis cavity, 6. attach the back cover and press it down to close the phone. Flag an anomaly if any step is missing (for example the back cover is attached without the motherboard inside), or if the steps are done out of order (for example the speaker module is installed before the charging port module, or the back cover is attached before all parts are in).",
+ "spec": {
+  "task": "assemble a phone on the workbench",
+  "mode": "sequence",
+  "ordered": true,
+  "steps": [
+   {
+    "id": 1,
+    "action_query": "install the camera module",
+    "part": "camera module",
+    "count": 1,
+    "text": "install the camera module into the chassis,",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 2,
+    "action_query": "install the motherboard",
+    "part": "motherboard",
+    "count": 1,
+    "text": "install the motherboard into the chassis,",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 3,
+    "action_query": "install the battery pack",
+    "part": "battery pack",
+    "count": 1,
+    "text": "install the battery pack into the battery bay,",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 4,
+    "action_query": "install the charging port module",
+    "part": "charging port module",
+    "count": 1,
+    "text": "install the charging port module at the bottom of the chassis,",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 5,
+    "action_query": "install the speaker module",
+    "part": "speaker module",
+    "count": 1,
+    "text": "install the speaker module into the lower chassis cavity,",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 6,
+    "action_query": "attach the back cover",
+    "part": "back cover",
+    "count": 1,
+    "text": "attach the back cover and press it down to close the phone.",
+    "groups": 0,
+    "timestamp": null
+   }
+  ],
+  "forbidden": [],
+  "flags": [
+   "missing_step",
+   "wrong_order"
+  ],
+  "qa_checks": [],
+  "anomaly_objects": [],
+  "_raw_prompt": "An operator assembles a phone on the workbench. The phone chassis is already on the table. In order: 1. install the camera module into the chassis, 2. install the motherboard into the chassis, 3. install the battery pack into the battery bay, 4. install the charging port module at the bottom of the chassis, 5. install the speaker module into the lower chassis cavity, 6. attach the back cover and press it down to close the phone. Flag an anomaly if any step is missing (for example the back cover is attached without the motherboard inside), or if the steps are done out of order (for example the speaker module is installed before the charging port module, or the back cover is attached before all parts are in).",
+  "forbidden_dropped": [
+   {
+    "action_query": "the motherboard inside",
+    "part": "motherboard",
+    "text": "The back cover should be attached only after the motherboard is installed."
+   }
+  ],
+  "monitor": null,
+  "qa_dropped": [],
+  "_known_labels": [
+   "Back cover",
+   "Battery pack",
+   "Camera module",
+   "Charging port module",
+   "Motherboard",
+   "Phone",
+   "Speaker module"
+  ],
+  "_vlm_steps": [
+   {
+    "id": 1,
+    "action_query": "install the camera module",
+    "part": "camera module",
+    "count": 1
+   },
+   {
+    "id": 2,
+    "action_query": "install the motherboard",
+    "part": "motherboard",
+    "count": 1
+   },
+   {
+    "id": 3,
+    "action_query": "install the battery pack",
+    "part": "battery pack",
+    "count": 1
+   },
+   {
+    "id": 4,
+    "action_query": "install the charging port module",
+    "part": "charging port module",
+    "count": 1
+   },
+   {
+    "id": 5,
+    "action_query": "install the speaker module",
+    "part": "speaker module",
+    "count": 1
+   },
+   {
+    "id": 6,
+    "action_query": "attach the back cover",
+    "part": "back cover",
+    "count": 1
+   }
+  ]
+ },
+ "trained_on": "Good.mkv",
+ "trained_on_path": "C:/Users/sonar/Desktop/Sequence_based_phone_assembly/inputs/Good.mkv",
+ "trained_at": "2026-11-20 12:03",
+ "detectors": [
+  "assembling_moPdel_v2-2 (obb)"
+ ],
+ "sequence": [
+  {
+   "step": 1,
+   "label": "install the camera module",
+   "part": "camera module",
+   "places": [
+    [
+     "camera module",
+     6.7
+    ]
+   ],
+   "t": 6.7
+  },
+  {
+   "step": 2,
+   "label": "install the motherboard",
+   "part": "motherboard",
+   "places": [
+    [
+     "motherboard",
+     11.4
+    ]
+   ],
+   "t": 11.4
+  },
+  {
+   "step": 3,
+   "label": "install the battery pack",
+   "part": "battery pack",
+   "places": [
+    [
+     "battery pack",
+     20.3
+    ]
+   ],
+   "t": 20.3
+  },
+  {
+   "step": 4,
+   "label": "install the charging port module",
+   "part": "charging port module",
+   "places": [
+    [
+     "charging port module",
+     30.2
+    ]
+   ],
+   "t": 30.2
+  },
+  {
+   "step": 5,
+   "label": "install the speaker module",
+   "part": "speaker module",
+   "places": [
+    [
+     "speaker module",
+     38.0
+    ]
+   ],
+   "t": 38.0
+  },
+  {
+   "step": 6,
+   "label": "attach the back cover",
+   "part": "back cover",
+   "places": [
+    [
+     "back cover",
+     42.4
+    ]
+   ],
+   "t": 42.4
+  }
+ ],
+ "self_check": "NORMAL",
+ "self_check_why": "the good video follows the spec's order",
+ "temporal": {
+  "stats": {
+   "iters": 600,
+   "seconds": 4.4,
+   "units": 6,
+   "kind": "tcn",
+   "label_counts": {
+    "NONE": 9349,
+    "PICKUP": 257,
+    "PLACE": 0,
+    "TOOL": 0
+   },
+   "device": "cuda"
+  },
+  "self_checks": [
+   {
+    "video": "Good.mkv",
+    "status": "NORMAL"
+   }
+  ],
+  "classes": [
+   "NONE",
+   "PICKUP",
+   "PLACE",
+   "TOOL"
+  ],
+  "features": 13,
+  "kind": "tcn"
+ },
+ "train_videos": [
+  "Good.mkv"
+ ],
+ "fps": 30.0
+}

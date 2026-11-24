@@ -1,0 +1,2 @@
+[console_scripts]
+sop-infer = sop_inference.infer:main

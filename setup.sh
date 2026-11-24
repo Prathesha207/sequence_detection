@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -e
+
+echo "======================================================="
+echo "         Sequence Detection Setup (Linux)"
+echo "======================================================="
+echo ""
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+cd "$SCRIPT_DIR/sequence_backend"
+chmod +x setup_linux.sh
+./setup_linux.sh "$@"
+
+echo ""
+echo "======================================================="
+echo "Setup completed successfully!"
+echo "To start the application, simply execute ./run.sh"
+echo "======================================================="

@@ -1,0 +1,238 @@
+{
+ "name": "Assembling_box_top_angle_noraml_20Nov_1139",
+ "prompt": "An operator packs a Lenovo product box on the table. The closed box (close_box), a black computer mouse (mouse), a white instruction card (instruction_card) and a white pen marker (pen_marker) start on the table. In order: 1. Open box, 2. put the mouse into the open box, 3. put the instruction card into the open box, 4. put the pen marker into the open box, 5. close the box with all the items inside (close_box). Flag an anomaly if any item is not put into the box before it is closed (for example the box is closed while the pen marker is still on the table), if the box is closed before all items are in, or if the items are put in out of order (for example the pen marker before the mouse).",
+ "spec": {
+  "task": "An operator packs a Lenovo product box on the table",
+  "mode": "sequence",
+  "ordered": true,
+  "steps": [
+   {
+    "id": 1,
+    "action_query": "open box",
+    "part": "open box",
+    "count": 1,
+    "visible_per_group": 1,
+    "text": "Open box,",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 2,
+    "action_query": "put the mouse into the open box",
+    "part": "mouse",
+    "count": 1,
+    "visible_per_group": 1,
+    "text": "put the mouse into the open box,",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 3,
+    "action_query": "put the instruction card into the open box",
+    "part": "instruction card",
+    "count": 1,
+    "visible_per_group": 1,
+    "text": "put the instruction card into the open box,",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 4,
+    "action_query": "put the pen marker into the open box",
+    "part": "pen marker",
+    "count": 1,
+    "visible_per_group": 1,
+    "text": "put the pen marker into the open box,",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 5,
+    "action_query": "close the box",
+    "part": "close box",
+    "count": 1,
+    "visible_per_group": 1,
+    "text": "close the box with all the items inside (close_box).",
+    "groups": 0,
+    "timestamp": null
+   }
+  ],
+  "forbidden": [],
+  "flags": [
+   "missing_step",
+   "wrong_order"
+  ],
+  "qa_checks": [],
+  "anomaly_objects": [],
+  "_raw_prompt": "An operator packs a Lenovo product box on the table. The closed box (close_box), a black computer mouse (mouse), a white instruction card (instruction_card) and a white pen marker (pen_marker) start on the table. In order: 1. Open box, 2. put the mouse into the open box, 3. put the instruction card into the open box, 4. put the pen marker into the open box, 5. close the box with all the items inside (close_box). Flag an anomaly if any item is not put into the box before it is closed (for example the box is closed while the pen marker is still on the table), if the box is closed before all items are in, or if the items are put in out of order (for example the pen marker before the mouse).",
+  "forbidden_dropped": [],
+  "monitor": null,
+  "qa_dropped": [],
+  "_known_labels": [
+   "close box",
+   "instruction card",
+   "mouse",
+   "open box",
+   "pen marker"
+  ],
+  "_vlm_steps": [
+   {
+    "id": 1,
+    "action_query": "open box",
+    "part": "open box",
+    "count": 1,
+    "visible_per_group": 1
+   },
+   {
+    "id": 2,
+    "action_query": "put the mouse into the open box",
+    "part": "mouse",
+    "count": 1,
+    "visible_per_group": 1
+   },
+   {
+    "id": 3,
+    "action_query": "put the instruction card into the open box",
+    "part": "instruction card",
+    "count": 1,
+    "visible_per_group": 1
+   },
+   {
+    "id": 4,
+    "action_query": "put the pen marker into the open box",
+    "part": "pen marker",
+    "count": 1,
+    "visible_per_group": 1
+   },
+   {
+    "id": 5,
+    "action_query": "close the box",
+    "part": "close box",
+    "count": 1,
+    "visible_per_group": 1
+   }
+  ],
+  "_written_by": "rules"
+ },
+ "trained_on": "Assembling_box_top_angle_noraml.mp4",
+ "trained_on_path": "C:/Users/sonar/Downloads/2026-11-17/2026-11-17/Assembling_box/Assembling_box_top_angle_noraml.mp4",
+ "trained_at": "2026-11-20 11:41",
+ "detectors": [
+  "assembling_box_model (detect)"
+ ],
+ "sequence": [
+  {
+   "step": 1,
+   "label": "open box",
+   "part": "open box",
+   "places": [],
+   "t": null
+  },
+  {
+   "step": 2,
+   "label": "put the mouse into the open box",
+   "part": "mouse",
+   "places": [
+    [
+     "mouse",
+     9.9
+    ]
+   ],
+   "t": 9.9
+  },
+  {
+   "step": 3,
+   "label": "put the instruction card into the open box",
+   "part": "instruction card",
+   "places": [
+    [
+     "instruction card",
+     13.1
+    ]
+   ],
+   "t": 13.1
+  },
+  {
+   "step": 4,
+   "label": "put the pen marker into the open box",
+   "part": "pen marker",
+   "places": [],
+   "t": null
+  },
+  {
+   "step": 5,
+   "label": "close the box",
+   "part": "close box",
+   "places": [
+    [
+     "close box",
+     4.5
+    ]
+   ],
+   "t": 4.5
+  }
+ ],
+ "self_check": "UNRELIABLE",
+ "self_check_why": "close the box at 4.5s comes before put the instruction card into the open box at 13.1s",
+ "temporal": {
+  "stats": {
+   "iters": 600,
+   "seconds": 4.3,
+   "units": 3,
+   "kind": "tcn",
+   "label_counts": {
+    "NONE": 2706,
+    "PICKUP": 126,
+    "PLACE": 0,
+    "TOOL": 0
+   },
+   "device": "cuda"
+  },
+  "self_checks": [
+   {
+    "video": "Assembling_box_top_angle_noraml.mp4",
+    "status": "ANOMALY"
+   }
+  ],
+  "classes": [
+   "NONE",
+   "PICKUP",
+   "PLACE",
+   "TOOL"
+  ],
+  "features": 13,
+  "kind": "tcn"
+ },
+ "train_videos": [
+  "Assembling_box_top_angle_noraml.mp4"
+ ],
+ "fps": 30.0,
+ "action_self_check": "NORMAL",
+ "action_self_check_steps": {
+  "1": {
+   "status": "COMPLETED",
+   "start": 2.6,
+   "end": 5.99
+  },
+  "2": {
+   "status": "COMPLETED",
+   "start": 8.32,
+   "end": 11.88
+  },
+  "3": {
+   "status": "COMPLETED",
+   "start": 10.92,
+   "end": 14.98
+  },
+  "4": {
+   "status": "COMPLETED",
+   "start": 14.81,
+   "end": 16.28
+  },
+  "5": {
+   "status": "COMPLETED",
+   "start": 16.61,
+   "end": 20.67
+  }
+ }
+}

@@ -1,0 +1,258 @@
+{
+ "name": "Camera_1_20260309_171253_25s_high_res_FF_18Nov_1400",
+ "prompt": "An operator packs a phone for shipping. In order: 1. place the empty outer box open on the table, 2. put the phone into the outer box, 3. close the lid of the outer box (the sticker place on the lid becomes visible), 4. take a tape strip and stick it on the closed outer box to seal it, 5. put the sealed outer box down on the table. Flag an anomaly if any step is missing (for example the box is closed without the phone inside, or it is not taped), or if the steps are done out of order (for example taping before the phone is inside, or closing the lid before the phone is in).",
+ "spec": {
+  "task": "pack a phone for shipping",
+  "mode": "sequence",
+  "ordered": true,
+  "steps": [
+   {
+    "id": 1,
+    "action_query": "place the box open",
+    "part": "outer box",
+    "count": 1,
+    "text": "place the empty outer box open on the table,",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 2,
+    "action_query": "put the phone in",
+    "part": "phone",
+    "count": 1,
+    "text": "put the phone into the outer box,",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 3,
+    "action_query": "close the lid",
+    "part": "outer box",
+    "count": 1,
+    "text": "close the lid of the outer box (the sticker place on the lid becomes visible),",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 4,
+    "action_query": "stick the tape",
+    "part": "tape",
+    "text": "take a tape strip and stick it on the closed outer box to seal it,",
+    "count": 1,
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 5,
+    "action_query": "put the box down",
+    "part": "outer box",
+    "count": 1,
+    "text": "put the sealed outer box down on the table.",
+    "groups": 0,
+    "timestamp": null
+   }
+  ],
+  "forbidden": [],
+  "flags": [
+   "missing_step",
+   "wrong_order"
+  ],
+  "qa_checks": [],
+  "anomaly_objects": [],
+  "_raw_prompt": "An operator packs a phone for shipping. In order: 1. place the empty outer box open on the table, 2. put the phone into the outer box, 3. close the lid of the outer box (the sticker place on the lid becomes visible), 4. take a tape strip and stick it on the closed outer box to seal it, 5. put the sealed outer box down on the table. Flag an anomaly if any step is missing (for example the box is closed without the phone inside, or it is not taped), or if the steps are done out of order (for example taping before the phone is inside, or closing the lid before the phone is in).",
+  "forbidden_dropped": [
+   {
+    "action_query": "the phone",
+    "part": "box",
+    "text": "do not close the lid without the phone inside"
+   }
+  ],
+  "monitor": null,
+  "qa_dropped": [
+   {
+    "id": "tape_ok",
+    "q": "is the tape properly applied?",
+    "fail_if": "no",
+    "why": "no rule in the prompt asks for it"
+   },
+   {
+    "id": "lid_visible",
+    "q": "is the lid sticker visible?",
+    "fail_if": "no",
+    "why": "no rule in the prompt asks for it"
+   }
+  ],
+  "_known_labels": [
+   "Back cover",
+   "Battery pack",
+   "Camera module",
+   "Charging port module",
+   "Motherboard",
+   "Phone",
+   "Speaker module",
+   "cab",
+   "chassis",
+   "front grille",
+   "rear body",
+   "roof light",
+   "screwdriver",
+   "side panel",
+   "truck",
+   "wheel"
+  ],
+  "_vlm_steps": [
+   {
+    "id": 1,
+    "action_query": "place the box open",
+    "part": "box",
+    "count": 1
+   },
+   {
+    "id": 2,
+    "action_query": "put the phone in",
+    "part": "phone",
+    "count": 1
+   },
+   {
+    "id": 3,
+    "action_query": "close the lid",
+    "part": "box",
+    "count": 1
+   },
+   {
+    "id": 4,
+    "action_query": "stick the tape",
+    "part": "tape"
+   },
+   {
+    "id": 5,
+    "action_query": "put the box down",
+    "part": "box",
+    "count": 1
+   }
+  ]
+ },
+ "trained_on": "Camera_1_20260309_171253_25s_high_res_FFV1.mkv",
+ "trained_on_path": "C:/Users/sonar/Downloads/tomo_apple/Camera_1_20260309_171253_25s_high_res_FFV1.mkv",
+ "trained_at": "2026-11-18 14:01",
+ "detectors": [
+  "assembling_moPdel_v2-2 (obb)",
+  "best (segment)",
+  "Dataset3_assemble_original (detect)"
+ ],
+ "sequence": [
+  {
+   "step": 1,
+   "label": "place the box open",
+   "part": "outer box",
+   "places": [
+    [
+     "outer box",
+     25.7
+    ]
+   ],
+   "t": 25.7
+  },
+  {
+   "step": 2,
+   "label": "put the phone in",
+   "part": "phone",
+   "places": [],
+   "t": null
+  },
+  {
+   "step": 3,
+   "label": "close the lid outer box",
+   "part": "outer box",
+   "places": [
+    [
+     "outer box",
+     25.7
+    ]
+   ],
+   "t": 25.7
+  },
+  {
+   "step": 4,
+   "label": "stick the tape",
+   "part": "tape",
+   "places": [],
+   "t": null
+  },
+  {
+   "step": 5,
+   "label": "put the box down",
+   "part": "outer box",
+   "places": [
+    [
+     "outer box",
+     25.7
+    ]
+   ],
+   "t": 25.7
+  }
+ ],
+ "self_check": "NORMAL",
+ "self_check_why": "the good video follows the spec's order",
+ "temporal": {
+  "stats": {
+   "iters": 600,
+   "seconds": 4.7,
+   "units": 3,
+   "kind": "tcn",
+   "label_counts": {
+    "NONE": 609,
+    "PICKUP": 15,
+    "PLACE": 0,
+    "TOOL": 0
+   },
+   "device": "cuda"
+  },
+  "self_checks": [
+   {
+    "video": "Camera_1_20260309_171253_25s_high_res_FFV1.mkv",
+    "status": "NORMAL"
+   }
+  ],
+  "classes": [
+   "NONE",
+   "PICKUP",
+   "PLACE",
+   "TOOL"
+  ],
+  "features": 13,
+  "kind": "tcn"
+ },
+ "train_videos": [
+  "Camera_1_20260309_171253_25s_high_res_FFV1.mkv"
+ ],
+ "fps": 3.0,
+ "action_self_check": "NORMAL",
+ "action_self_check_steps": {
+  "1": {
+   "status": "INITIAL_STATE",
+   "start": null,
+   "end": 0.0
+  },
+  "2": {
+   "status": "COMPLETED",
+   "start": 13.33,
+   "end": 16.0
+  },
+  "3": {
+   "status": "COMPLETED",
+   "start": 20.0,
+   "end": 25.67
+  },
+  "4": {
+   "status": "COMPLETED",
+   "start": 35.0,
+   "end": 43.0
+  },
+  "5": {
+   "status": "COMPLETED",
+   "start": 57.0,
+   "end": 65.0
+  }
+ }
+}

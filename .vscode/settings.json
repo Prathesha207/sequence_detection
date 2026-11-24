@@ -1,0 +1,19 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/sequence_backend/.venv/Scripts/python.exe",
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/sequence_backend",
+    "${workspaceFolder}/sequence_backend/app"
+  ],
+  "python.autoComplete.extraPaths": [
+    "${workspaceFolder}/sequence_backend",
+    "${workspaceFolder}/sequence_backend/app"
+  ],
+  "python.analysis.diagnosticSeverityOverrides": {
+    "reportMissingModuleSource": "none"
+  },
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true
+  },
+  "css.lint.unknownAtRules": "ignore"
+}
