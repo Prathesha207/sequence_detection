@@ -63,66 +63,65 @@ def get_config() -> SequenceConfig: return _config
 
 _env_lock, _env_info, _infer_mod = threading.Lock(), None, None
 
-# Set default SOP_MONITOR_HOME immediately if not set
+def _find_wheel_data_dir() -> Optional[Path]:
+    """Finds the _data directory packaged inside the installed sop_inference wheel in site-packages."""
+    try:
+        import importlib.util
+        spec = importlib.util.find_spec("sop_inference")
+        if spec and spec.submodule_search_locations:
+            for loc in spec.submodule_search_locations:
+                data_path = Path(loc) / "_data"
+                if (data_path / "models.json").is_file():
+                    return data_path.resolve()
+    except Exception:
+        pass
+    return None
+
+# Set default SOP_MONITOR_HOME from installed wheel package
 if not os.environ.get("SOP_MONITOR_HOME"):
-    for cand in [
-        Path("d:/sequence_detection/ml/sop_inference/_data"),
-        Path(__file__).resolve().parent / "sop_inference" / "_data",
-        Path(__file__).resolve().parents[3] / "ml" / "sop_inference" / "_data",
-    ]:
-        if (cand / "models.json").is_file():
-            os.environ["SOP_MONITOR_HOME"] = str(cand.resolve())
-            break
+    wheel_data = _find_wheel_data_dir()
+    if wheel_data:
+        os.environ["SOP_MONITOR_HOME"] = str(wheel_data)
 
 def prepare_environment() -> Dict[str, Any]:
     global _env_info
     with _env_lock:
-        if _env_info is not None: return _env_info
+        if _env_info is not None:
+            return _env_info
         explicit = _config.data_home or os.environ.get("SOP_MONITOR_HOME")
         if explicit:
             home = Path(explicit).expanduser().resolve()
         else:
-            candidates = [
-                Path("d:/sequence_detection/ml/sop_inference/_data"),
-                Path(__file__).resolve().parent / "sop_inference" / "_data",
-                Path(__file__).resolve().parents[3] / "ml" / "sop_inference" / "_data",
-                (Path.home() / "SOP_Inference").resolve(),
-            ]
-            home = next((c for c in candidates if (c / "models.json").is_file()), candidates[0])
+            wheel_data = _find_wheel_data_dir()
+            home = wheel_data if wheel_data else (Path.home() / "SOP_Inference").resolve()
         try:
             home.mkdir(parents=True, exist_ok=True)
         except Exception:
             pass
         os.environ["SOP_MONITOR_HOME"] = str(home)
         _env_info = {"home": str(home)}
-        logger.info(f"[SEQ] Data folder: {home}")
+        logger.info(f"[SEQ] Data folder (wheel): {home}")
         return _env_info
 
 def import_infer():
     global _infer_mod
-    if _infer_mod is not None: return _infer_mod
+    if _infer_mod is not None:
+        return _infer_mod
     prepare_environment()
-    # Ensure local ML source trees are in sys.path as resilient fallback
-    for p in [
-        str(Path(__file__).resolve().parent),
-        str(Path(__file__).resolve().parents[3] / "ml"),
-        "d:/sequence_detection/ml",
-    ]:
-        if os.path.isdir(p) and p not in sys.path:
-            sys.path.insert(0, p)
 
-    for name in [os.environ.get("SOP_INFER_MODULE"), "sop_inference.infer", "sop_inference", "infer"]:
-        if not name: continue
+    for name in [os.environ.get("SOP_INFER_MODULE"), "sop_inference.infer", "sop_inference"]:
+        if not name:
+            continue
         try:
             mod = importlib.import_module(name)
             if hasattr(mod, "SOPMonitor"):
                 _infer_mod = mod
-                logger.info(f"[SEQ] ML module loaded: {name}")
+                logger.info(f"[SEQ] ML wheel package loaded from: {getattr(mod, '__file__', name)}")
                 return mod
         except Exception as err:
             logger.warning(f"[SEQ] Failed importing {name}: {err}")
             continue
-    raise SequenceModelError("Cannot import SOPMonitor. Ensure sop_inference is installed.")
+    raise SequenceModelError("Cannot import SOPMonitor. Ensure sop_inference wheel is installed in the Python environment.")
 
 def _torch():
     try:
