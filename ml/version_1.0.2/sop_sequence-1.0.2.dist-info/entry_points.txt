@@ -1,0 +1,3 @@
+[console_scripts]
+sop-seq-infer = sop_sequence.infer:main
+sop-seq-train = sop_sequence.train:main

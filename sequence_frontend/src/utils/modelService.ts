@@ -66,19 +66,67 @@ export async function selectAndLoadModel(
     return true;
   }
 
-  // Set the selected active model name
-  useInferenceStore.getState().setActiveModel(modelName);
+  let resolvedName = modelName;
+  let loadedSteps: ModelStepInfo[] | null = null;
+  let loadedOnEngine = true;
+
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/models/select`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model_name: modelName }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showToast('error', data.detail || `Failed to load model "${modelName}"`);
+      return false;
+    }
+    if (data?.model) resolvedName = data.model;
+    if (Array.isArray(data?.steps)) loadedSteps = data.steps;
+    loadedOnEngine = data?.loaded !== false;
+  } catch (err) {
+    console.warn(`[modelService] Failed to sync selected model ${modelName}:`, err);
+    showToast('error', `Could not reach backend to load model "${modelName}"`);
+    return false;
+  }
+
+  // Persist selected active model name in store and refresh model list active flags
+  useInferenceStore.getState().setActiveModel(resolvedName);
+  void fetchAvailableModels();
 
   if (isCameraMode) {
-    // In camera mode, there is no video to upload — immediately load the procedural steps!
-    await loadModelSteps(modelName);
-    showToast('success', `SOP Model loaded for camera: ${modelName}`);
+    if (loadedSteps && loadedSteps.length > 0) {
+      useInferenceStore.getState().setStats({
+        active_model: resolvedName,
+        steps: loadedSteps.map((s) => ({
+          id: s.step,
+          step: s.step,
+          label: s.label,
+          st: 'waiting' as const,
+          status: 'waiting',
+        })),
+        total_steps: loadedSteps.length,
+        sequence: [],
+        doing: null,
+        steps_done_count: 0,
+        steps_progress: 0,
+        verdict: null,
+      });
+    } else {
+      await loadModelSteps(resolvedName);
+    }
+    showToast(
+      loadedOnEngine ? 'success' : 'info',
+      loadedOnEngine
+        ? `SOP Model loaded for camera: ${resolvedName}`
+        : `SOP Model selected for camera: ${resolvedName}`
+    );
     return true;
   }
 
   // For video mode: keep steps empty until video is uploaded
   useInferenceStore.getState().setStats({
-    active_model: modelName,
+    active_model: resolvedName,
     steps: [],
     total_steps: 0,
     sequence: [],
@@ -88,7 +136,12 @@ export async function selectAndLoadModel(
     verdict: null,
   });
 
-  showToast('info', `Model selected: ${modelName}. Upload a video to start.`);
+  showToast(
+    loadedOnEngine ? 'success' : 'info',
+    loadedOnEngine
+      ? `Model loaded: ${resolvedName}. Upload a video to start.`
+      : `Model selected: ${resolvedName}. Will load when training finishes.`
+  );
 
   if (autoPromptUpload) {
     // Immediately prompt user to upload video file for this model
@@ -116,4 +169,43 @@ export async function fetchAvailableModels(): Promise<any[]> {
     console.warn('[modelService] Could not list models:', err);
   }
   return [];
+}
+
+/**
+ * Deletes a user-trained workspace model on the backend and refreshes state.
+ */
+export async function deleteWorkspaceModel(
+  modelName: string,
+  isCameraMode: boolean = false
+): Promise<{ ok: boolean; nextActiveModel?: string | null }> {
+  if (!modelName) return { ok: false };
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/models/${encodeURIComponent(modelName)}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      showToast('error', data.detail || `Failed to delete model "${modelName}"`);
+      return { ok: false };
+    }
+
+    const wasActive = useInferenceStore.getState().activeModel === modelName;
+    const nextActive: string | null = data?.next_active_model || null;
+
+    await fetchAvailableModels();
+    showToast('success', `Deleted trained model "${modelName}"`);
+
+    if (wasActive) {
+      if (nextActive) {
+        await selectAndLoadModel(nextActive, false, isCameraMode);
+      } else {
+        await selectAndLoadModel('', false, isCameraMode);
+      }
+    }
+    return { ok: true, nextActiveModel: nextActive };
+  } catch (err) {
+    console.warn(`[modelService] Failed to delete model ${modelName}:`, err);
+    showToast('error', `Could not reach backend to delete "${modelName}"`);
+    return { ok: false };
+  }
 }

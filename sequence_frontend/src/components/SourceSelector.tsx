@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StreamSourceType } from '../types';
-import { Video, Camera, Play, Square, Loader2, Disc, Trash2 } from 'lucide-react';
+import { Video, Camera, Play, Square, Trash2, Sparkles } from 'lucide-react';
 
 import { useInferenceStore } from '../store/inferenceStore';
-import { ModelChooserModal } from './sequence/ModelChooserModal';
-import { selectAndLoadModel } from '../utils/modelService';
-
-const formatTime = (totalSeconds: number = 0) => {
-  const mins = Math.floor(totalSeconds / 60);
-  const secs = totalSeconds % 60;
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-};
 
 interface SourceSelectorProps {
   sourceType: StreamSourceType;
   onSourceChange: (type: StreamSourceType) => void;
+
+  appMode?: 'inference' | 'training';
+  onModeChange?: (mode: 'inference' | 'training') => void;
+  onStartTraining?: () => void;
+  onStopTraining?: () => void;
+  isTrainingRunning?: boolean;
+  isTrainingStarting?: boolean;
+  hasTrainingVideo?: boolean;
+  onClearTrainingVideo?: () => void;
 
   onOpenSettings?: () => void;
   onCustomVideoUploaded?: (videoUrl: string, fileName: string, sessionId?: string) => void;
@@ -46,6 +47,14 @@ interface SourceSelectorProps {
 export const SourceSelector: React.FC<SourceSelectorProps> = ({
   sourceType,
   onSourceChange,
+  appMode = 'training',
+  onModeChange,
+  onStartTraining,
+  onStopTraining,
+  isTrainingRunning = false,
+  isTrainingStarting: _isTrainingStarting = false,
+  hasTrainingVideo: _hasTrainingVideo = false,
+  onClearTrainingVideo: _onClearTrainingVideo,
 
   onOpenSettings: _onOpenSettings,
   customVideoName: _customVideoName,
@@ -54,28 +63,23 @@ export const SourceSelector: React.FC<SourceSelectorProps> = ({
   onClearCustomVideo,
   isRunning = false,
   isStarting = false,
-  isRecording = false,
-  isSavingRecording = false,
-  recordingDuration = 0,
-  onToggleRecording,
+  isRecording: _isRecording = false,
+  isSavingRecording: _isSavingRecording = false,
+  recordingDuration: _recordingDuration = 0,
+  onToggleRecording: _onToggleRecording,
   onToggleRunning,
   onStopInference,
-  onResumeInference,
+  onResumeInference: _onResumeInference,
   onRequestSwitchMode,
-  isStreaming = false,
-  onStartStream,
-  onStopStream,
-  isCameraConnected = true,
-  cameraStartingState = 'ready',
-  cameraRecordSessionId,
+  isStreaming: _isStreaming = false,
+  onStartStream: _onStartStream,
+  onStopStream: _onStopStream,
+  isCameraConnected: _isCameraConnected = true,
+  cameraStartingState: _cameraStartingState = 'ready',
+  cameraRecordSessionId: _cameraRecordSessionId,
   onClearCameraRecord: _onClearCameraRecord,
 }) => {
   const isVideoLoading = useInferenceStore((state) => state.isVideoLoading);
-  const activeModel = useInferenceStore((state) => state.activeModel);
-  const setActiveModel = useInferenceStore((state) => state.setActiveModel);
-
-  const isModelModalOpen = useInferenceStore((state) => state.isModelModalOpen);
-  const setIsModelModalOpen = useInferenceStore((state) => state.setIsModelModalOpen);
 
   const handleSourceClick = (targetType: StreamSourceType) => {
     if (isRunning) return;
@@ -89,7 +93,6 @@ export const SourceSelector: React.FC<SourceSelectorProps> = ({
 
   const isVideoMode = sourceType === 'sample-pond' || sourceType === 'uploaded-video';
   const isCameraMode = sourceType === 'oak-camera' || sourceType === 'webcam';
-  const hasMediaToPlay = (isCameraMode && isCameraConnected) || isVideoMode;
 
   return (
     <div className="w-full flex-shrink-0">
@@ -126,164 +129,69 @@ export const SourceSelector: React.FC<SourceSelectorProps> = ({
           </button>
         </div>
 
-        {/* Stream Play/Stop Controls */}
-        <div className="flex items-center justify-end gap-1.5 sm:gap-3 flex-shrink-0 ml-auto">
-          {hasMediaToPlay && (
-            <div className="flex items-center gap-1 sm:gap-2 pl-2 sm:pl-3 border-l border-[var(--border-color)]">
-              {isCameraMode && cameraStartingState !== 'ready' ? (
-                <button
-                  disabled
-                  className="h-8 sm:h-9 flex items-center gap-1.5 px-3.5 sm:px-4 rounded-xl bg-amber-600/80 text-white font-bold text-[11px] sm:text-xs shadow-xs cursor-wait opacity-90 transition-all shrink-0"
-                >
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>{cameraStartingState === 'waking_camera' ? 'WAKING CAMERA...' : 'WARMING UP...'}</span>
-                </button>
-              ) : isStarting ? (
-                <button
-                  disabled
-                  className="h-8 sm:h-9 flex items-center gap-1.5 px-3.5 sm:px-4 rounded-xl bg-emerald-600/80 text-white font-bold text-[11px] sm:text-xs shadow-xs cursor-wait opacity-90 transition-all shrink-0"
-                >
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>STARTING...</span>
-                </button>
-              ) : isRunning ? (
-                <button
-                  onClick={() => {
+        {/* Navigation & Contextual Controls */}
+        <div className="flex items-center justify-end gap-1.5 sm:gap-2 flex-shrink-0 ml-auto">
+          {/* Page Navigation 1: TRAINING */}
+          <button
+            type="button"
+            onClick={() => onModeChange?.('training')}
+            title="Go to Training page"
+            className={`h-8 sm:h-9 flex items-center gap-1.5 px-3 sm:px-5 rounded-xl font-bold text-[11px] sm:text-xs shadow-sm transition-all shrink-0 cursor-pointer active:scale-95 ${appMode === 'training'
+                ? 'bg-[var(--accent-main)] text-white hover:opacity-90'
+                : 'bg-[var(--bg-card-subtle)] hover:bg-[var(--accent-pond-subtle)] hover:border-[var(--accent-main)] border border-[var(--border-color)] text-[var(--text-primary)]'
+              }`}
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span className="whitespace-nowrap">TRAINING</span>
 
-                    if (onStopInference) onStopInference();
-                    else if (onToggleRunning) onToggleRunning();
-                  }}
-                  title="Stop AI inference"
-                  className="h-8 sm:h-9 flex items-center gap-1.5 px-3 sm:px-4 rounded-xl bg-[var(--status-bad)] hover:opacity-90 text-white font-bold text-[11px] sm:text-xs shadow-xs active:scale-95 cursor-pointer transition-all"
-                >
-                  <Square className="w-3.5 h-3.5 fill-current" />
-                  <span>{isCameraMode ? 'FINISH INSPECTION' : 'STOP'}</span>
-                </button>
-              ) : (
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <button
-                    disabled={isStarting || isVideoLoading}
-                    onClick={() => {
-                      if (isStarting || isVideoLoading) return;
+          </button>
 
-                      // In video mode: when no video is uploaded/running, always open the modal so user can choose model
-                      if (isVideoMode && !hasActiveVideo) {
-                        setIsModelModalOpen(true);
-                        return;
-                      }
+          {/* Page Navigation 2: INFERENCE */}
+          <button
+            type="button"
+            onClick={() => onModeChange?.('inference')}
+            title="Go to Inference page"
+            className={`h-8 sm:h-9 flex items-center gap-1.5 px-3 sm:px-5 rounded-xl font-bold text-[11px] sm:text-xs shadow-sm transition-all shrink-0 cursor-pointer active:scale-95 ${appMode === 'inference'
+                ? 'bg-[var(--accent-main)] text-white hover:opacity-90'
+                : 'bg-[var(--bg-card-subtle)] hover:bg-[var(--accent-pond-subtle)] hover:border-[var(--accent-main)] border border-[var(--border-color)] text-[var(--text-primary)]'
+              }`}
+          >
+            <Play className="w-3.5 h-3.5 fill-current" />
+            <span className="whitespace-nowrap">INFERENCE</span>
+          </button>
 
-                      // In camera mode: if no model selected yet, open modal so user can choose model
-                      if (isCameraMode && !activeModel) {
-                        setIsModelModalOpen(true);
-                        return;
-                      }
+          {/* Stop Inference button when actively running */}
+          {appMode === 'inference' && isRunning && (
+            <button
+              onClick={() => {
+                if (onStopInference) onStopInference();
+                else if (onToggleRunning) onToggleRunning();
+              }}
+              title="Stop AI inference"
+              className="h-8 sm:h-9 flex items-center gap-1.5 px-3 sm:px-4 rounded-xl bg-[var(--status-bad)] hover:opacity-90 text-white font-bold text-[11px] sm:text-xs shadow-xs active:scale-95 cursor-pointer transition-all"
+            >
+              <Square className="w-3.5 h-3.5 fill-current" />
+              <span>{isCameraMode ? 'FINISH INSPECTION' : 'STOP'}</span>
+            </button>
+          )}
 
-                      // If video is loaded or camera is active, start/resume inference
-                      if (onResumeInference) onResumeInference();
-                      else if (onToggleRunning) onToggleRunning();
-                    }}
-                    title="Start SOP sequence inference"
-                    className={`h-8 sm:h-9 flex items-center gap-1.5 px-3 sm:px-5 rounded-xl font-bold text-[11px] sm:text-xs shadow-sm transition-all shrink-0 ${isStarting || isVideoLoading
-                      ? 'bg-emerald-950/80 text-emerald-400/80 border border-emerald-700/50 cursor-not-allowed opacity-80'
-                      : 'bg-[var(--accent-main)] text-white hover:opacity-90 active:scale-95 cursor-pointer'
-                      }`}
-                  >
-                    {isStarting || isVideoLoading ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Play className="w-3.5 h-3.5 fill-current" />
-                    )}
-                    <span className="whitespace-nowrap">START INFERENCE</span>
-                  </button>
-
-                  {/* Clear Video button */}
-                  {isVideoMode && hasActiveVideo && !isRunning && (
-                    <button
-                      disabled={isStarting || isVideoLoading}
-                      onClick={() => {
-                        onClearCustomVideo?.();
-                      }}
-                      title="Clear video and results"
-                      className="h-8 sm:h-9 flex items-center gap-1.5 px-3 sm:px-4 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold text-[11px] sm:text-xs shadow-md shadow-rose-600/30 active:scale-95 cursor-pointer transition-all shrink-0 border border-rose-500"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>CLEAR</span>
-                    </button>
-                  )}
-
-                  {/* Camera Record Button */}
-                  {isCameraMode && isStreaming && !isRunning && !cameraRecordSessionId && (
-                    <button
-                      disabled={isSavingRecording}
-                      onClick={() => {
-
-                        onToggleRecording?.();
-                      }}
-                      title={isRecording ? 'Stop camera recording' : 'Start recording camera stream'}
-                      className={`h-8 sm:h-9 flex items-center gap-1.5 px-3 rounded-xl font-bold text-[11px] sm:text-xs shadow-xs transition-all shrink-0 cursor-pointer active:scale-95 ${isRecording
-                        ? 'bg-[var(--status-bad)] text-white animate-pulse'
-                        : 'bg-[var(--status-bad-bg)] border border-[var(--status-bad)]/40 text-[var(--status-bad-text)] hover:bg-[var(--status-bad)] hover:text-white'
-                        }`}
-                    >
-                      {isRecording ? (
-                        <>
-                          <Disc className="w-3.5 h-3.5 animate-spin" />
-                          <span>REC {formatTime(recordingDuration)}</span>
-                        </>
-                      ) : (
-                        <>
-                          <Video className="w-3.5 h-3.5" />
-                          <span>REC</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-
-                  {/* Camera Stream Only */}
-                  {isCameraMode && !cameraRecordSessionId && (
-                    !isStreaming ? (
-                      <button
-                        onClick={() => {
-
-                          onStartStream?.();
-                        }}
-                        title="Start camera stream without inference"
-                        className="h-8 sm:h-9 flex items-center gap-1.5 px-3 rounded-xl bg-[var(--bg-card-subtle)] hover:border-[var(--accent-main)] border border-[var(--border-color)] text-[var(--text-primary)] font-bold text-[11px] sm:text-xs active:scale-95 cursor-pointer transition-all shrink-0"
-                      >
-                        <Play className="w-3 h-3 fill-current" />
-                        <span>STREAM</span>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => {
-
-                          onStopStream?.();
-                        }}
-                        title="Stop camera stream"
-                        className="h-8 sm:h-9 flex items-center gap-1.5 px-3 rounded-xl bg-[var(--bg-card-subtle)] hover:bg-[var(--status-bad)] hover:text-white border border-[var(--border-color)] text-[var(--text-primary)] font-bold text-[11px] sm:text-xs active:scale-95 cursor-pointer transition-all shrink-0"
-                      >
-                        <Square className="w-3 h-3 fill-current" />
-                        <span>STOP</span>
-                      </button>
-                    )
-                  )}
-                </div>
-              )}
-            </div>
+          {/* Clear Video button in inference mode */}
+          {appMode === 'inference' && isVideoMode && hasActiveVideo && !isRunning && (
+            <button
+              disabled={isStarting || isVideoLoading}
+              onClick={() => {
+                onClearCustomVideo?.();
+              }}
+              title="Clear video and results"
+              className="h-8 sm:h-9 flex items-center gap-1.5 px-3 sm:px-4 rounded-xl bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white font-bold text-[11px] sm:text-xs shadow-md shadow-rose-600/30 active:scale-95 cursor-pointer transition-all shrink-0 border border-rose-500"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>CLEAR</span>
+            </button>
           )}
         </div>
 
       </div>
-
-      {/* Model Chooser Dialog Modal */}
-      <ModelChooserModal
-        isOpen={isModelModalOpen}
-        onClose={() => setIsModelModalOpen(false)}
-        activeModel={activeModel}
-        onSelectModel={(modelName) => {
-          selectAndLoadModel(modelName, !isCameraMode, isCameraMode);
-        }}
-      />
     </div>
   );
 };

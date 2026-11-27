@@ -13,6 +13,7 @@ import { BoundingBoxOverlay } from './canvas/BoundingBoxOverlay';
 import { VideoUploadCard } from './canvas/VideoUploadCard';
 import { CameraOfflineCard } from './canvas/CameraOfflineCard';
 import { CameraStandbyCard } from './canvas/CameraStandbyCard';
+import { CameraLeftToolbar } from './canvas/CameraLeftToolbar';
 import { TopToolbar } from './canvas/TopToolbar';
 import { StatusBar } from './canvas/StatusBar';
 import { LoadingOverlay } from './canvas/LoadingOverlay';
@@ -36,6 +37,11 @@ interface DetectionCanvasProps {
   onResumeInference?: () => void;
   isStreaming?: boolean;
   onStartStream?: () => void;
+  onStopStream?: () => void;
+  isRecording?: boolean;
+  isSavingRecording?: boolean;
+  recordingDuration?: number;
+  onToggleRecording?: () => void;
   onRequestSwitchMode?: (type: StreamSourceType) => void;
   fps: number;
   sourceType: StreamSourceType;
@@ -84,6 +90,11 @@ export const DetectionCanvas: React.FC<DetectionCanvasProps> = ({
   onResumeInference,
   isStreaming = false,
   onStartStream,
+  onStopStream,
+  isRecording = false,
+  isSavingRecording = false,
+  recordingDuration = 0,
+  onToggleRecording,
   onRequestSwitchMode,
   fps,
   sourceType,
@@ -523,6 +534,33 @@ export const DetectionCanvas: React.FC<DetectionCanvasProps> = ({
           isFirstFrameLoaded={isFirstFrameLoaded}
           framesProcessed={effectiveFramesProcessed}
         />
+      )}
+
+      {/* Left-Side Vertical Camera Toolbar (Stream / Record / Stop Stream) */}
+      {!isOverlayShowing && isCameraSource && isCameraConnected && isStreaming && !hasCameraRecording && !isRunning && (
+        <CameraLeftToolbar
+          isStreaming={isStreaming}
+          isRecording={isRecording}
+          isSavingRecording={isSavingRecording}
+          recordingDuration={recordingDuration}
+          onStartStream={onStartStream}
+          onStopStream={onStopStream}
+          onToggleRecording={onToggleRecording}
+          recordTooltip="Record Camera Stream"
+        />
+      )}
+
+      {/* Recording Status Badge (rounded-xl theme card matching TopToolbar, no oval) */}
+      {!isOverlayShowing && isRecording && (
+        <div className="absolute top-2.5 sm:top-3 left-1/2 -translate-x-1/2 z-30 flex items-center h-7 sm:h-8 px-3 rounded-xl bg-[var(--bg-card)]/95 backdrop-blur-md border border-[var(--status-bad-border)] shadow-xs pointer-events-none select-none">
+          <div className="flex items-center gap-2 text-[var(--status-bad-text)] font-bold text-xs tracking-wide">
+            <span className="w-2 h-2 rounded-full bg-[var(--status-bad)] animate-pulse shrink-0" />
+            <span>RECORDING</span>
+            <span className="font-mono text-[var(--text-primary)] tabular-nums">
+              {`${Math.floor(recordingDuration / 60).toString().padStart(2, '0')}:${(recordingDuration % 60).toString().padStart(2, '0')}`}
+            </span>
+          </div>
+        </div>
       )}
 
       {/* Floating Bottom Status Bar */}

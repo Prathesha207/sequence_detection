@@ -2,7 +2,7 @@ export type ThemeMode = 'pond-light' | 'pond-dark' | 'nature';
 
 export type StreamSourceType = 'sample-pond' | 'oak-camera' | 'uploaded-video' | 'webcam';
 
-export type StepStatus = 'waiting' | 'doing' | 'done' | 'ooo';
+export type StepStatus = 'waiting' | 'doing' | 'confirming' | 'warning' | 'done' | 'ooo' | 'taken_back' | 'missing';
 
 export interface SOPStep {
   id: number;
@@ -11,7 +11,8 @@ export interface SOPStep {
   at?: number | null;      // Time in seconds when step finished
   took?: number | null;    // Duration in seconds
   det?: number | null;     // Detection confidence %
-  note?: string;           // Out of order or deviation explanation
+  taken?: boolean;         // Part taken (step in progress)
+  note?: string;           // Out of order, warning, or deviation explanation
 }
 
 export interface SOPModel {

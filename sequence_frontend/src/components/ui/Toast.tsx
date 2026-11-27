@@ -21,14 +21,14 @@ export const Toast: React.FC<ToastProps> = ({ type, message, onClose }) => {
     error: <AlertCircle className="w-4 h-4 shrink-0 text-rose-600 dark:text-rose-400" />,
     warning: <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />,
     success: <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600 dark:text-emerald-400" />,
-    info: <Info className="w-4 h-4 shrink-0" style={{ color: 'var(--accent-main, #7886C7)' }} />,
+    info: <Info className="w-4 h-4 shrink-0" style={{ color: 'var(--accent-main)' }} />,
   };
 
   return (
     <div className="fixed bottom-4 right-4 z-50 animate-in fade-in slide-in-from-bottom-3 duration-200 pointer-events-auto max-w-md">
       <div
         className={`flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl border backdrop-blur-md ${typeStyles[type]}`}
-        style={type === 'info' ? { borderLeftColor: 'var(--accent-main, #7886C7)' } : undefined}
+        style={type === 'info' ? { borderLeftColor: 'var(--accent-main)' } : undefined}
       >
         {icons[type]}
         <span className="text-xs font-bold tracking-wide flex-1">{message}</span>

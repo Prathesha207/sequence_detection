@@ -28,6 +28,7 @@ from app.utils.exceptions import AppException
 
 from app.models.camera_model import Camera
 from app.models.recording_model import Recording
+from app.models.training_model import TrainingSession
 from app.utils.resource_path import resource_path
 import time
 from app.core.logger import setup_logger

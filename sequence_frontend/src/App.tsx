@@ -18,6 +18,9 @@ import { resetBBoxCache, mapDetections } from './utils/mlDataMapper';
 import { DEFAULT_VIDEO_WIDTH, DEFAULT_VIDEO_HEIGHT } from './utils/constants';
 import { loadSessionState, saveSessionState, clearSessionState } from './utils/sessionPersistence';
 import { selectAndLoadModel, loadModelSteps } from './utils/modelService';
+import { useTrainingStore } from './store/trainingStore';
+import { TrainingWorkspace } from './components/training/TrainingWorkspace';
+import { TrainingSidebar } from './components/training/TrainingSidebar';
 
 // Extracted hooks — each one owns a clean slice of state + effects
 import { useBackendHealth } from './hooks/useBackendHealth';
@@ -34,6 +37,24 @@ export default function App() {
 
   // ─── 2. Toast Notifications & Activity Logs ────────────────────────
   const { toast, setToast, showToast, logs, addLog } = useToastAndLogs();
+
+  // ─── Training Pipeline Studio State ────────────────────────────────
+  const {
+    appMode,
+    setAppMode,
+    job: trainingJob,
+    startTraining,
+    stopTraining,
+    isStarting: isTrainingStarting,
+    selectedDatasetVideo,
+    setSelectedDatasetVideo,
+    hyperparams: trainingHyperparams,
+  } = useTrainingStore();
+
+  const isTrainingRunning =
+    trainingJob.status === 'training' ||
+    trainingJob.status === 'preparing' ||
+    trainingJob.status === 'evaluating';
 
   // ─── 3. Theme & UI Shell ───────────────────────────────────────────
   const [theme, setTheme] = useState<ThemeMode>(() => {
@@ -414,11 +435,17 @@ export default function App() {
       camera.setCameraStartingState('ready');
       camera.setIsStreaming(false);
       video.clearCameraRecording(); // CRITICAL: prevent old recordings from hijacking the camera UI and showing the video inference card
+      if (isCurrentCamera !== isTargetCamera) {
+        useTrainingStore.getState().setSelectedDatasetVideo(null, null);
+      }
       addLog(`Stream source switched to: ${targetType.toUpperCase()}`, 'info');
       showToast('info', 'Switched to OAK Camera mode');
       // No auto-start — CameraStandbyCard renders until user clicks Start Stream.
     } else {
       camera.setCameraStartingState('ready');
+      if (isCurrentCamera !== isTargetCamera) {
+        useTrainingStore.getState().setSelectedDatasetVideo(null, null);
+      }
       if (video.customVideoUrl) {
         showToast('info', 'Switched to Video mode • Press Start Inference to evaluate');
       } else {
@@ -468,14 +495,58 @@ export default function App() {
     if (recording.isRecording) {
       const res = await recording.stopRecording();
       if (res && res.filename) {
-        showToast('success', `Recording saved: ${res.filename}`);
+        if (appMode === 'training' && res.session_id) {
+          const rawUrl = `${getApiBaseUrl()}/video/raw/${res.session_id}`;
+          const durSec = res.duration || 0;
+          const mins = Math.floor(durSec / 60);
+          const secs = Math.floor(durSec % 60);
+          const durFormatted =
+            durSec > 0
+              ? `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+              : '--:--';
+          const sizeBytes = res.file_size || 0;
+          const sizeFormatted =
+            sizeBytes > 0
+              ? sizeBytes / (1024 * 1024) < 1
+                ? `${Math.round(sizeBytes / 1024)} KB`
+                : `${(sizeBytes / (1024 * 1024)).toFixed(1)} MB`
+              : '-- MB';
+
+          const trainingStore = useTrainingStore.getState();
+          trainingStore.setSelectedDatasetVideo(rawUrl, res.filename, res.recording_path || null);
+          trainingStore.setVideoMetadata({
+            durationSeconds: durSec,
+            durationFormatted: durFormatted,
+            width: res.width || 0,
+            height: res.height || 0,
+            sizeBytes,
+            sizeFormatted,
+          });
+
+          // Stop live camera stream cleanly while reviewing the recorded clip
+          camera.setIsStreaming(false);
+          try {
+            await cameraService.stopStream();
+          } catch {}
+
+          showToast('success', `Recording ready for training: ${res.filename}`);
+        } else {
+          showToast('success', `Recording saved: ${res.filename}`);
+        }
       }
     } else {
+      if (appMode === 'training') {
+        useTrainingStore.getState().setSelectedDatasetVideo(null, null);
+      }
       if (!camera.isStreaming && camera.startCameraStream) {
         await camera.startCameraStream();
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
-      await recording.startRecording(camera.effectiveCameraConfig.recordingFormat || 'MP4');
+      const fmt =
+        appMode === 'training'
+          ? 'MP4'
+          : camera.effectiveCameraConfig.recordingFormat || 'MP4';
+      await recording.startRecording(fmt);
     }
   };
 
@@ -796,6 +867,36 @@ export default function App() {
           sourceType={sourceType}
           onSourceChange={(st) => { setSourceType(st); addLog(`Stream source switched to: ${st.toUpperCase()}`, 'info'); }}
           onRequestSwitchMode={handleRequestSwitchMode}
+          appMode={appMode}
+          onModeChange={(mode) => {
+            if (isRunning && mode === 'training') {
+              showToast('warning', 'Please stop live inference before switching to Training Studio');
+              return;
+            }
+            setAppMode(mode);
+            addLog(`Switched view mode to: ${mode.toUpperCase()}`, 'info');
+          }}
+          onStartTraining={async () => {
+            const isVideoMode = sourceType === 'uploaded-video' || sourceType === 'sample-pond';
+            if (isVideoMode && !selectedDatasetVideo) {
+              showToast('warning', 'Please upload a training video first');
+              return;
+            }
+            if (!trainingHyperparams.model_name.trim()) {
+              showToast('warning', 'Please enter a Training Name');
+              return;
+            }
+            if (!trainingHyperparams.prompt.trim()) {
+              showToast('warning', 'Please enter a Training Prompt');
+              return;
+            }
+            await startTraining();
+          }}
+          onStopTraining={stopTraining}
+          isTrainingRunning={isTrainingRunning}
+          isTrainingStarting={isTrainingStarting}
+          hasTrainingVideo={Boolean(selectedDatasetVideo)}
+          onClearTrainingVideo={() => setSelectedDatasetVideo(null, null)}
           isRunning={isRunning}
           isStarting={isStarting}
           isRecording={recording.isRecording}
@@ -806,6 +907,7 @@ export default function App() {
           onStopInference={handleStopInference}
           onResumeInference={handleResumeInference}
           isStreaming={camera.isStreaming}
+          isCameraConnected={camera.effectiveCameraConfig.connected}
           onStartStream={camera.startCameraStream}
           onStopStream={handleStopStream}
 
@@ -823,78 +925,124 @@ export default function App() {
         />
 
         <div className="w-full flex flex-col lg:flex-row items-stretch flex-1 min-h-0 gap-4">
-          <main className="flex-1 w-full min-w-0 min-h-0 flex flex-col">
-            <DetectionCanvas
-              detections={anomalyFinal.activeDetections}
-              anomalyStatus={anomalyFinal.anomalyStatus}
-              feedMode={feedMode}
-              onFeedModeChange={setFeedMode}
-              isRunning={isRunning}
-              isStarting={isStarting}
-              onToggleRunning={handleToggleRunning}
-              onStopInference={handleStopInference}
-              onResumeInference={handleResumeInference}
-              isStreaming={camera.isStreaming}
-              onRequestSwitchMode={handleRequestSwitchMode}
-              fps={fps}
-              sourceType={sourceType}
-              customVideoUrl={video.customVideoUrl}
-              videoSessionId={video.videoSessionId}
-              selectedDetectionId={selectedDetectionId}
-              onSelectDetection={setSelectedDetectionId}
-              onCustomVideoUploaded={video.handleVideoUploaded}
-              cameraStartingState={camera.cameraStartingState}
-              onCameraDeviceChange={camera.setIsCameraDeviceActive}
+          {appMode === 'training' ? (
+            <>
+              <main className="flex-1 w-full min-w-0 min-h-0 flex flex-col">
+                <TrainingWorkspace
+                  sourceType={sourceType}
+                  isCameraConnected={camera.effectiveCameraConfig.connected}
+                  isStreaming={camera.isStreaming}
+                  cameraError={camera.cameraError}
+                  cameraConfig={camera.effectiveCameraConfig}
+                  isRecording={recording.isRecording}
+                  isSavingRecording={recording.isSaving}
+                  recordingDuration={recording.recordingDuration}
+                  onToggleRecording={handleToggleRecording}
+                  onStartStream={camera.startCameraStream}
+                  onStopStream={handleStopStream}
+                  onRetryConnection={camera.startCameraStream}
+                  onRequestSwitchMode={(type) => executeSwitchMode(type)}
+                  onDeployToInference={(modelName) => {
+                    setAppMode('inference');
+                    selectAndLoadModel(modelName, false, isCameraSource);
+                    addLog(`Deployed & selected trained model '${modelName}' for inference`, 'success');
+                  }}
+                  onShowToast={showToast}
+                />
+              </main>
 
-              videoDimensions={video.videoDimensions}
-              isCameraConnected={camera.effectiveCameraConfig.connected}
-              initialUploadFile={video.initialUploadFile}
-              recordedFile={recording.recordedFile}
-              clearRecording={recording.clearRecording}
-              isBackendConnected={isBackendConnected}
-              onRegisterTriggerUpload={(fn) => {
-                uploadTriggerRef.current = fn;
-                useInferenceStore.getState().setTriggerUploadFn(fn);
-              }}
-              lastCameraFrame={lastCameraFrame}
-              lastVideoFrame={lastVideoFrame}
-              onCaptureVideoFrame={setLastVideoFrame}
-              onRetryConnection={camera.startCameraStream}
-              onStartStream={camera.startCameraStream}
-              framesProcessed={inference.framesProcessed}
-              cameraRecordSessionId={video.cameraRecordSessionId}
-              cameraRecordUrl={video.cameraRecordUrl}
-              cameraRecordName={video.cameraRecordName}
-              onClearCameraRecord={handleClearCameraRecord}
-              cameraTargetFps={camera.effectiveCameraConfig.targetFps || 30}
-              recordingFormat={camera.effectiveCameraConfig.recordingFormat || 'MP4'}
-              cameraConfig={camera.effectiveCameraConfig}
-              cameraError={camera.cameraError}
-            />
-          </main>
+              <TrainingSidebar
+                sourceType={sourceType}
+                isCameraConnected={camera.effectiveCameraConfig.connected}
+                cameraConfig={camera.effectiveCameraConfig}
+                onUpdateCameraConfig={(patch: any) => {
+                  camera.setCameraConfig((prev) => ({ ...prev, ...patch }));
+                }}
+                isRecording={recording.isRecording || recording.isSaving}
+                onShowToast={showToast}
+              />
+            </>
+          ) : (
+            <>
+              <main className="flex-1 w-full min-w-0 min-h-0 flex flex-col">
+                <DetectionCanvas
+                  detections={anomalyFinal.activeDetections}
+                  anomalyStatus={anomalyFinal.anomalyStatus}
+                  feedMode={feedMode}
+                  onFeedModeChange={setFeedMode}
+                  isRunning={isRunning}
+                  isStarting={isStarting}
+                  onToggleRunning={handleToggleRunning}
+                  onStopInference={handleStopInference}
+                  onResumeInference={handleResumeInference}
+                  isStreaming={camera.isStreaming}
+                  onStopStream={handleStopStream}
+                  isRecording={recording.isRecording}
+                  isSavingRecording={recording.isSaving}
+                  recordingDuration={recording.recordingDuration}
+                  onToggleRecording={handleToggleRecording}
+                  onRequestSwitchMode={handleRequestSwitchMode}
+                  fps={fps}
+                  sourceType={sourceType}
+                  customVideoUrl={video.customVideoUrl}
+                  videoSessionId={video.videoSessionId}
+                  selectedDetectionId={selectedDetectionId}
+                  onSelectDetection={setSelectedDetectionId}
+                  onCustomVideoUploaded={video.handleVideoUploaded}
+                  cameraStartingState={camera.cameraStartingState}
+                  onCameraDeviceChange={camera.setIsCameraDeviceActive}
 
-          <SequenceSidebar
-            isOpen={drawerOpen}
-            onToggle={() => setDrawerOpen(!drawerOpen)}
-            anomalyStatus={anomalyFinal.anomalyStatus}
-            detections={anomalyFinal.activeDetections}
-            metrics={metrics}
-            selectedDetectionId={selectedDetectionId}
-            onSelectDetection={setSelectedDetectionId}
-            isStandby={isStandby}
-            isRunning={isRunning}
-            logs={logs}
-            isCameraSource={isCameraSource}
-            isCameraConnected={camera.effectiveCameraConfig.connected}
-            cameraConfig={camera.effectiveCameraConfig}
-            onUpdateCameraConfig={(patch: any) => {
-              camera.setCameraConfig((prev) => ({ ...prev, ...patch }));
-            }}
-            isRecording={recording.isRecording || recording.isSaving}
-            onShowToast={showToast}
-            onClearVideo={handleClearCustomVideo}
-            hasActiveVideo={Boolean(video.customVideoUrl || video.customVideoName)}
-          />
+                  videoDimensions={video.videoDimensions}
+                  isCameraConnected={camera.effectiveCameraConfig.connected}
+                  initialUploadFile={video.initialUploadFile}
+                  recordedFile={recording.recordedFile}
+                  clearRecording={recording.clearRecording}
+                  isBackendConnected={isBackendConnected}
+                  onRegisterTriggerUpload={(fn) => {
+                    uploadTriggerRef.current = fn;
+                    useInferenceStore.getState().setTriggerUploadFn(fn);
+                  }}
+                  lastCameraFrame={lastCameraFrame}
+                  lastVideoFrame={lastVideoFrame}
+                  onCaptureVideoFrame={setLastVideoFrame}
+                  onRetryConnection={camera.startCameraStream}
+                  onStartStream={camera.startCameraStream}
+                  framesProcessed={inference.framesProcessed}
+                  cameraRecordSessionId={video.cameraRecordSessionId}
+                  cameraRecordUrl={video.cameraRecordUrl}
+                  cameraRecordName={video.cameraRecordName}
+                  onClearCameraRecord={handleClearCameraRecord}
+                  cameraTargetFps={camera.effectiveCameraConfig.targetFps || 30}
+                  recordingFormat={camera.effectiveCameraConfig.recordingFormat || 'MP4'}
+                  cameraConfig={camera.effectiveCameraConfig}
+                  cameraError={camera.cameraError}
+                />
+              </main>
+
+              <SequenceSidebar
+                isOpen={drawerOpen}
+                onToggle={() => setDrawerOpen(!drawerOpen)}
+                anomalyStatus={anomalyFinal.anomalyStatus}
+                detections={anomalyFinal.activeDetections}
+                metrics={metrics}
+                selectedDetectionId={selectedDetectionId}
+                onSelectDetection={setSelectedDetectionId}
+                isStandby={isStandby}
+                isRunning={isRunning}
+                logs={logs}
+                isCameraSource={isCameraSource}
+                isCameraConnected={camera.effectiveCameraConfig.connected}
+                cameraConfig={camera.effectiveCameraConfig}
+                onUpdateCameraConfig={(patch: any) => {
+                  camera.setCameraConfig((prev) => ({ ...prev, ...patch }));
+                }}
+                isRecording={recording.isRecording || recording.isSaving}
+                onShowToast={showToast}
+                onClearVideo={handleClearCustomVideo}
+                hasActiveVideo={Boolean(video.customVideoUrl || video.customVideoName)}
+              />
+            </>
+          )}
         </div>
       </div>
 

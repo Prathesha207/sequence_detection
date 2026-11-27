@@ -69,9 +69,13 @@ export function useAnomalyStatus({
     }
 
     const isAnomaly = isAnomalyFrame || backendStatus === 'ANOMALY' || verdict === 'ANOMALY';
-    const doing = backendStats.doing;
-    const doingStepObj = Array.isArray(backendStats.steps) ? backendStats.steps.find((s: any) => s.step === doing || s.id === doing) : null;
-    const doingLabel = doingStepObj ? doingStepObj.label : doing ? `Step ${doing}` : undefined;
+    const rawDoing = backendStats.doing;
+    const doingArr = Array.isArray(rawDoing) ? rawDoing : rawDoing != null ? [rawDoing] : [];
+    const doing = doingArr.length > 0 ? Number(doingArr[0]) : null;
+    const doingStepObj = doing != null && Array.isArray(backendStats.steps)
+      ? backendStats.steps.find((s: any) => s.step === doing || s.id === doing)
+      : null;
+    const doingLabel = doingStepObj ? doingStepObj.label : doing != null ? `Step ${doing}` : undefined;
 
     return {
       isAnomaly,
@@ -79,7 +83,9 @@ export function useAnomalyStatus({
       message: isAnomaly ? 'DEVIATION DETECTED' : 'ON TRACK',
       subMessage: isAnomaly
         ? 'Step performed out of sequence or deviation detected.'
-        : `Inspecting SOP cycle. Current action: ${doingLabel || 'Step 1'}.`,
+        : doingLabel
+          ? `Inspecting SOP cycle. Current action: ${doingLabel}.`
+          : `Inspecting SOP cycle (${String(backendStats.state || 'INSPECTING')}).`,
       doingStep: doing,
       doingLabel,
       verdict,

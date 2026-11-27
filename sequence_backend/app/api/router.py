@@ -7,6 +7,7 @@ from app.api import (
 )
 from app.routers import oak_camera_router
 from app.routers import model_router
+from app.routers import training_router
 from app.routers.realtime_logs import router as realtime_logs_router
 
 
@@ -17,4 +18,5 @@ router.include_router(recording_api.router, prefix="/recording", tags=["Recordin
 router.include_router(new_video_router, prefix="/video", tags=["Video"])
 router.include_router(oak_camera_router.router, prefix="/oak", tags=["OAK Camera"])
 router.include_router(model_router.router)
+router.include_router(training_router.router)
 router.include_router(realtime_logs_router)

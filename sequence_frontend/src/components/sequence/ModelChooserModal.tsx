@@ -83,7 +83,7 @@ export const ModelChooserModal: React.FC<ModelChooserModalProps> = ({
         {/* Compact Header */}
         <div className="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
           <div className="flex items-center gap-2">
-            <Cpu className="w-4 h-4 text-[var(--accent-main,#7886C7)] shrink-0" />
+            <Cpu className="w-4 h-4 text-[var(--accent-main)] shrink-0" />
             <h2 className="text-sm font-extrabold tracking-tight">Select SOP Model</h2>
           </div>
           <button
@@ -98,7 +98,7 @@ export const ModelChooserModal: React.FC<ModelChooserModalProps> = ({
         <div className="my-2.5 max-h-[45vh] overflow-y-auto space-y-1.5 pr-0.5">
           {loading ? (
             <div className="py-8 flex flex-col items-center justify-center gap-2 text-xs text-[var(--text-muted)]">
-              <Loader2 className="w-5 h-5 animate-spin text-[var(--accent-main,#7886C7)]" />
+              <Loader2 className="w-5 h-5 animate-spin text-[var(--accent-main)]" />
               <span>Loading trained models...</span>
             </div>
           ) : models.length === 0 ? (
@@ -118,14 +118,14 @@ export const ModelChooserModal: React.FC<ModelChooserModalProps> = ({
                   onDoubleClick={() => handleConfirm(m.name)}
                   className={`flex items-center gap-2.5 px-3 py-2 rounded-lg border cursor-pointer transition-all select-none ${
                     isChosen
-                      ? 'border-[var(--accent-main,#7886C7)] bg-[var(--accent-main,#7886C7)]/10 shadow-xs'
-                      : 'border-[var(--border-color)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-main,#7886C7)]/50'
+                      ? 'border-[var(--accent-main)] bg-[var(--accent-main)]/10 shadow-xs'
+                      : 'border-[var(--border-color)] bg-[var(--bg-card-subtle)] hover:border-[var(--accent-main)]/50'
                   }`}
                 >
                   <div
                     className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition-all ${
                       isChosen
-                        ? 'border-[var(--accent-main,#7886C7)] bg-[var(--accent-main,#7886C7)] text-white'
+                        ? 'border-[var(--accent-main)] bg-[var(--accent-main)] text-white'
                         : 'border-slate-300 dark:border-slate-600 bg-[var(--bg-card)]'
                     }`}
                   >
@@ -162,7 +162,7 @@ export const ModelChooserModal: React.FC<ModelChooserModalProps> = ({
           <button
             onClick={() => handleConfirm()}
             disabled={!selected || models.length === 0}
-            className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[var(--accent-main,#7886C7)] text-white hover:opacity-90 active:scale-95 transition disabled:opacity-50 cursor-pointer shadow-xs"
+            className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-[var(--accent-main)] text-white hover:opacity-90 active:scale-95 transition disabled:opacity-50 cursor-pointer shadow-xs"
           >
             Select & Load Model
           </button>

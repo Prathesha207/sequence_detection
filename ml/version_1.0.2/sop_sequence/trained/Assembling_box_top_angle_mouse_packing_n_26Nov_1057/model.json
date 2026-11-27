@@ -1,0 +1,207 @@
+{
+ "name": "Assembling_box_top_angle_mouse_packing_n_26Nov_1057",
+ "prompt": "1. Insert the battery into the mouse. 2. Fit the black battery cover onto the mouse. 3. Place the mouse into the open box. 4. Close the box.",
+ "spec": {
+  "task": "1",
+  "mode": "sequence",
+  "ordered": true,
+  "steps": [
+   {
+    "id": 1,
+    "action_query": "insert the battery into the mouse",
+    "part": "battery",
+    "count": 1,
+    "visible_per_group": 1,
+    "text": "Insert the battery into the mouse.",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 2,
+    "action_query": "fit the black battery cover onto the mouse",
+    "part": "black battery cover",
+    "count": 1,
+    "visible_per_group": 1,
+    "text": "Fit the black battery cover onto the mouse.",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 3,
+    "action_query": "place the mouse into the open box",
+    "part": "mouse",
+    "count": 1,
+    "visible_per_group": 1,
+    "text": "Place the mouse into the open box.",
+    "groups": 0,
+    "timestamp": null
+   },
+   {
+    "id": 4,
+    "action_query": "close the box",
+    "part": "box",
+    "count": 1,
+    "visible_per_group": 1,
+    "text": "Close the box.",
+    "groups": 0,
+    "timestamp": null
+   }
+  ],
+  "forbidden": [],
+  "flags": [
+   "missing_step",
+   "wrong_order"
+  ],
+  "qa_checks": [],
+  "anomaly_objects": [],
+  "_raw_prompt": "1. Insert the battery into the mouse. 2. Fit the black battery cover onto the mouse. 3. Place the mouse into the open box. 4. Close the box.",
+  "forbidden_dropped": [],
+  "monitor": null,
+  "qa_dropped": [],
+  "_known_labels": [
+   "battery",
+   "black battery cover",
+   "box",
+   "mouse",
+   "open box"
+  ],
+  "_vlm_steps": [
+   {
+    "id": 1,
+    "action_query": "insert the battery into the mouse",
+    "part": "battery",
+    "count": 1,
+    "visible_per_group": 1
+   },
+   {
+    "id": 2,
+    "action_query": "fit the black battery cover onto the mouse",
+    "part": "black battery cover",
+    "count": 1,
+    "visible_per_group": 1
+   },
+   {
+    "id": 3,
+    "action_query": "place the mouse into the open box",
+    "part": "mouse",
+    "count": 1,
+    "visible_per_group": 1
+   },
+   {
+    "id": 4,
+    "action_query": "close the box",
+    "part": "box",
+    "count": 1,
+    "visible_per_group": 1
+   }
+  ],
+  "_written_by": "rules",
+  "context_objects": [
+   "open box"
+  ]
+ },
+ "trained_on": "Assembling_box_top_angle_mouse_packing_normal.mp4",
+ "trained_on_path": "C:/Users/sonar/Downloads/Assembling_box_top_angle_mouse_packing_normal.mp4",
+ "trained_at": "2026-11-26 10:57",
+ "detectors": [
+  "train_packing_mouse_auto (detect)"
+ ],
+ "sequence": [
+  {
+   "step": 1,
+   "label": "insert the battery into the mouse",
+   "part": "battery",
+   "places": [
+    [
+     "battery pack",
+     7.1
+    ]
+   ],
+   "t": 7.1
+  },
+  {
+   "step": 2,
+   "label": "fit the black battery cover onto the mouse",
+   "part": "black battery cover",
+   "places": [
+    [
+     "battery pack",
+     7.1
+    ]
+   ],
+   "t": 7.1
+  },
+  {
+   "step": 3,
+   "label": "place the mouse into the open box",
+   "part": "mouse",
+   "places": [],
+   "t": null
+  },
+  {
+   "step": 4,
+   "label": "close the box",
+   "part": "box",
+   "places": [],
+   "t": null
+  }
+ ],
+ "self_check": "NORMAL",
+ "self_check_why": "the good video follows the spec's order",
+ "temporal": {
+  "stats": {
+   "iters": 600,
+   "seconds": 4.7,
+   "units": 2,
+   "kind": "tcn",
+   "label_counts": {
+    "NONE": 1054,
+    "PICKUP": 86,
+    "PLACE": 0,
+    "TOOL": 0
+   },
+   "device": "cuda"
+  },
+  "self_checks": [
+   {
+    "video": "Assembling_box_top_angle_mouse_packing_normal.mp4",
+    "status": "NORMAL"
+   }
+  ],
+  "classes": [
+   "NONE",
+   "PICKUP",
+   "PLACE",
+   "TOOL"
+  ],
+  "features": 13,
+  "kind": "tcn"
+ },
+ "train_videos": [
+  "Assembling_box_top_angle_mouse_packing_normal.mp4"
+ ],
+ "fps": 30.0,
+ "action_self_check": "NORMAL",
+ "action_self_check_steps": {
+  "1": {
+   "status": "COMPLETED",
+   "start": 0.7,
+   "end": 3.77
+  },
+  "2": {
+   "status": "COMPLETED",
+   "start": 3.8,
+   "end": 7.13
+  },
+  "3": {
+   "status": "COMPLETED",
+   "start": 7.1,
+   "end": 11.37
+  },
+  "4": {
+   "status": "COMPLETED",
+   "start": 8.5,
+   "end": 13.0
+  }
+ }
+}

@@ -32,6 +32,16 @@
   inherits: true;
   initial-value: #475E66;
 }
+@property --accent-main {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #7886C7;
+}
+@property --accent-soft {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: rgba(120, 134, 199, 0.16);
+}
 @property --accent-pond {
   syntax: '<color>';
   inherits: true;
@@ -58,6 +68,9 @@
     --text-muted: #7E8BA0;
 
     --accent-main: #7886C7;
+    --accent-soft: rgba(120, 134, 199, 0.16);
+    --accent-primary: #7886C7;
+    --accent-primary-soft: rgba(120, 134, 199, 0.16);
     --accent-pond: #7886C7;
     --accent-pond-dark: #5E6EB9;
     --accent-pond-subtle: #F0F2FA;
@@ -117,6 +130,8 @@
     --text-secondary: #CBD5E1;
     --text-muted: #94A3B8;
 
+    --accent-main: #F59E0B;
+    --accent-soft: rgba(245, 158, 11, 0.16);
     --accent-primary: #F59E0B;
     --accent-primary-soft: rgba(245, 158, 11, 0.16);
     --accent-secondary: #FBBF24;
@@ -180,6 +195,13 @@
     --text-primary: #F4F8F6;
     --text-secondary: #A3C7BD;
     --text-muted: #6B988C;
+
+    --accent-main: #F0E491;
+    --accent-soft: rgba(240, 228, 145, 0.14);
+    --accent-primary: #F0E491;
+    --accent-primary-soft: rgba(240, 228, 145, 0.14);
+    --accent-secondary: #B5A54D;
+    --accent-secondary-soft: rgba(181, 165, 77, 0.16);
 
     --accent-pond: #F0E491;
     --accent-pond-dark: #B5A54D;

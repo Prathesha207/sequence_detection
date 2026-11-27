@@ -20,11 +20,11 @@ interface ThemePalette {
 }
 
 const PALETTE_THEME: ThemePalette = {
-  border: 'border-[var(--accent-main,#7886C7)]',
-  bg: 'bg-[var(--accent-main,#7886C7)]/10',
-  tagBg: 'bg-[var(--accent-main,#7886C7)]',
-  arrowBorderDown: 'border-t-[var(--accent-main,#7886C7)]',
-  arrowBorderUp: 'border-b-[var(--accent-main,#7886C7)]',
+  border: 'border-[var(--accent-main)]',
+  bg: 'bg-[var(--accent-main)]/10',
+  tagBg: 'bg-[var(--accent-main)]',
+  arrowBorderDown: 'border-t-[var(--accent-main)]',
+  arrowBorderUp: 'border-b-[var(--accent-main)]',
 };
 
 const PALETTE_ANOMALY: ThemePalette = {

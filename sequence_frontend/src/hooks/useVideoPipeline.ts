@@ -206,7 +206,12 @@ export function useVideoPipeline({
     resetBBoxCache();
     setIsStarting(true);
     try {
-      const response = await fetch(`${getApiBaseUrl()}/video/start/${sid}`, { method: 'POST' });
+      const selectedModel = useInferenceStore.getState().activeModel;
+      if (selectedModel) {
+        await loadModelSteps(selectedModel);
+      }
+      const query = selectedModel ? `?model_name=${encodeURIComponent(selectedModel)}` : '';
+      const response = await fetch(`${getApiBaseUrl()}/video/start/${sid}${query}`, { method: 'POST' });
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
         throw new Error(body.detail || body.message || 'Unable to start inference');

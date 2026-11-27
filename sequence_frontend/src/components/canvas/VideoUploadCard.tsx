@@ -6,12 +6,16 @@ interface VideoUploadCardProps {
   isSelectingVideo: boolean;
   isBackendConnected?: boolean;
   onCardClick?: () => void;
+  title?: string;
+  subtitle?: React.ReactNode;
 }
 
 export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
   uploadProgress,
   isSelectingVideo,
   onCardClick,
+  title = 'Upload Video for Inference',
+  subtitle,
 }) => {
   return (
     <div
@@ -20,22 +24,26 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
     >
       <div
         onClick={onCardClick}
-        className="w-full h-full rounded-[14px] border-2 border-dashed border-[var(--border-color)] hover:border-[var(--accent-main,#7886C7)] transition cursor-pointer flex flex-col items-center justify-center text-center p-3 sm:p-6 lg:p-8 overflow-y-auto hidden-scrollbar pointer-events-auto group"
+        className="w-full h-full rounded-[14px] border-2 border-dashed border-[var(--border-color)] hover:border-[var(--accent-main)] transition cursor-pointer flex flex-col items-center justify-center text-center p-3 sm:p-6 lg:p-8 overflow-y-auto hidden-scrollbar pointer-events-auto group"
         style={{ backgroundColor: 'var(--bg-card)' }}
       >
-        <div className="text-[var(--accent-main,#7886C7)] group-hover:scale-105 transition-transform mb-2 sm:mb-3 shrink-0">
+        <div className="text-[var(--accent-main)] group-hover:scale-105 transition-transform mb-2 sm:mb-3 shrink-0">
           <UploadCloud className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 stroke-[1.75]" />
         </div>
 
         <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-[var(--text-primary)] mb-1.5 sm:mb-2 shrink-0">
-          Upload Video for Inference
+          {title}
         </h3>
         <p className="text-xs sm:text-sm lg:text-base text-[var(--text-secondary)] max-w-md mb-4 sm:mb-6 shrink-0 leading-relaxed">
-          Click <span className="font-bold text-[var(--accent-main,#7886C7)]">START INFERENCE</span> above to choose a model, or click here to upload a video.
+          {subtitle ?? (
+            <>
+              Click <span className="font-bold text-[var(--accent-main)]">START INFERENCE</span> above to choose a model, or click here to upload a video.
+            </>
+          )}
         </p>
 
         {isSelectingVideo && uploadProgress === null && (
-          <div className="flex items-center gap-2 mb-4 text-xs sm:text-sm text-[var(--accent-main,#7886C7)] font-medium shrink-0">
+          <div className="flex items-center gap-2 mb-4 text-xs sm:text-sm text-[var(--accent-main)] font-medium shrink-0">
             <Loader2 className="w-4 h-4 animate-spin" />
             <span>Selecting video...</span>
           </div>
@@ -45,16 +53,16 @@ export const VideoUploadCard: React.FC<VideoUploadCardProps> = ({
           <div className="w-full max-w-sm mb-4 sm:mb-5 shrink-0">
             <div className="flex items-center justify-between text-xs text-[var(--text-secondary)] mb-1.5 font-medium">
               <span className="flex items-center gap-1.5">
-                <Loader2 className="w-4 h-4 animate-spin text-[var(--accent-main,#7886C7)]" />
+                <Loader2 className="w-4 h-4 animate-spin text-[var(--accent-main)]" />
                 Uploading video file...
               </span>
-              <span className="font-bold font-mono text-[var(--accent-main,#7886C7)]">
+              <span className="font-bold font-mono text-[var(--accent-main)]">
                 {Math.round(uploadProgress)}%
               </span>
             </div>
             <div className="w-full h-2.5 bg-[var(--btn-secondary-border)] rounded-full overflow-hidden">
               <div
-                className="h-full bg-[var(--accent-main,#7886C7)] transition-all duration-150 rounded-full"
+                className="h-full bg-[var(--accent-main)] transition-all duration-150 rounded-full"
                 style={{ width: `${uploadProgress}%` }}
               />
             </div>

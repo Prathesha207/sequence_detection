@@ -1,0 +1,55 @@
+[
+  {
+    "type": "yolo",
+    "name": "assembling_moPdel_v2-2 (obb)",
+    "path": "weights/detectors/phone_assembly_yolo_obb.pt",
+    "conf": 0.25,
+    "imgsz": 0,
+    "enabled": false,
+    "task": "obb",
+    "classes": [
+      "Phone",
+      "Camera_module",
+      "Battery_pack",
+      "Motherboard",
+      "Back_cover",
+      "Speaker_module",
+      "Charging_port_module"
+    ],
+    "use_for": "phone assembly: phone, camera / battery / motherboard / speaker / charging port modules, back cover - BEST for the phone SOP"
+  },
+  {
+    "type": "yolo",
+    "name": "assembling_box_model_v2 (detect)",
+    "path": "weights/detectors/assembling_box_model_v2.pt",
+    "conf": 0.25,
+    "imgsz": 960,
+    "enabled": true,
+    "task": "detect",
+    "classes": [
+      "open_box",
+      "close_box",
+      "mouse",
+      "pen_marker",
+      "instruction_card"
+    ],
+    "use_for": "box assembly, TOP camera: fine-tuned 25 Nov (SAM2-tracked labels + augmented pen-marker frames) - sees the pen marker in the hand / in the box"
+  },
+  {
+    "type": "yolo",
+    "name": "train_packing_mouse_auto (detect)",
+    "path": "weights/detectors/train_packing_mouse_auto.pt",
+    "conf": 0.25,
+    "imgsz": 0,
+    "enabled": true,
+    "task": "detect",
+    "classes": [
+      "battery",
+      "mouse",
+      "black_battery_cover",
+      "open_box",
+      "box"
+    ],
+    "use_for": "mouse packing, TOP camera: battery, mouse, black_battery_cover, open_box, box (box = the closed box)"
+  }
+]

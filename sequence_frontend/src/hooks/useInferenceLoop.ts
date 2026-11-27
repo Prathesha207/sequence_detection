@@ -71,6 +71,10 @@ export function useInferenceLoop({
           try {
             const data = JSON.parse(event.data);
             if (!isMounted) return;
+            const resolvedModel = data.active_model || data.model_name;
+            if (resolvedModel && !useInferenceStore.getState().activeModel) {
+              useInferenceStore.getState().setActiveModel(resolvedModel);
+            }
             useInferenceStore.getState().setStats(data);
 
             if (data.status === 'error' || data.status === 'stopped' || data.done) {
@@ -143,6 +147,10 @@ export function useInferenceLoop({
         const data = await res.json();
         if (!isMounted) return;
 
+        const resolvedModel = data.active_model || data.model_name;
+        if (resolvedModel && !useInferenceStore.getState().activeModel) {
+          useInferenceStore.getState().setActiveModel(resolvedModel);
+        }
         useInferenceStore.getState().setStats(data);
 
         if (data.status === 'error' || data.status === 'stopped' || data.done) {

@@ -29,13 +29,17 @@ export interface InferenceStats {
   // SOP Sequence fields from ML orchestrator
   active_model: string;
   sequence: number[];      // e.g. [1, 3, 2]
-  doing: number | null;    // e.g. 3
+  doing: number[] | number | null;
+  pending?: Record<string, number>;
+  warnings?: Record<string, string>;
+  taken?: number[];
   steps: SOPStep[];
   total_steps: number;
   steps_done_count: number;
   steps_progress: number;
   is_anomaly_frame: boolean;
-  verdict: 'NORMAL' | 'ANOMALY' | null;
+  is_order_warning?: boolean;
+  verdict: 'NORMAL' | 'ANOMALY' | 'UNCERTAIN' | null;
   activity_log: Array<{ t: number; text: string }>;
 
   // Video / Canvas telemetry
@@ -81,12 +85,16 @@ const initialStats: InferenceStats = {
 
   active_model: '',
   sequence: [],
-  doing: null,
+  doing: [],
+  pending: {},
+  warnings: {},
+  taken: [],
   steps: [],
   total_steps: 0,
   steps_done_count: 0,
   steps_progress: 0,
   is_anomaly_frame: false,
+  is_order_warning: false,
   verdict: null,
   activity_log: [],
 

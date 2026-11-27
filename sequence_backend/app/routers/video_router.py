@@ -345,21 +345,23 @@ async def _ensure_session_exists(session_id: str):
             return session
 
     try:
-        from app.core.app_paths import get_ml_output_dir, get_desktop_dir
+        from app.core.app_paths import get_ml_output_dir, get_desktop_dir, get_inference_base_dir
         base_output_dir = str(get_ml_output_dir())
     except Exception:
         base_output_dir = os.path.join(tempfile.gettempdir(), "sequence_detection_output")
     session_dir = os.path.join(base_output_dir, session_id)
     if not os.path.isdir(session_dir):
         try:
-            desktop = get_desktop_dir()
-            archive_base = desktop / "inference_results"
-            if archive_base.exists():
-                for date_folder in sorted(archive_base.iterdir(), reverse=True):
-                    cand = date_folder / session_id
-                    if cand.is_dir():
-                        session_dir = str(cand)
-                        break
+            search_bases = [get_inference_base_dir(), get_desktop_dir() / "inference_results"]
+            for archive_base in search_bases:
+                if archive_base.exists():
+                    for date_folder in sorted(archive_base.iterdir(), reverse=True):
+                        cand = date_folder / session_id
+                        if cand.is_dir():
+                            session_dir = str(cand)
+                            break
+                if os.path.isdir(session_dir):
+                    break
         except Exception:
             pass
 
@@ -492,11 +494,36 @@ async def _ensure_session_exists(session_id: str):
     return None
 
 @router.post("/start/{session_id}")
-async def start_video_inference(session_id: str, background_tasks: BackgroundTasks):
+async def start_video_inference(
+    session_id: str,
+    background_tasks: BackgroundTasks,
+    model_name: Optional[str] = None,
+):
     try:
         session = await _ensure_session_exists(session_id)
         if not session:
             return JSONResponse(status_code=404, content={"message": "Session not found."})
+
+        if model_name and model_name.strip():
+            from app.ml import sequence_inference as seqinf
+            try:
+                resolved_model = seqinf.resolve_model_name(model_name.strip())
+            except seqinf.SequenceInferenceError as e:
+                raise HTTPException(status_code=404, detail=str(e))
+            session["model_name"] = resolved_model
+            if isinstance(session.get("stats"), dict):
+                session["stats"]["model_name"] = resolved_model
+                session["stats"]["active_model"] = resolved_model
+            if session.get("session_dir") and session.get("inference_video_path"):
+                _save_session_meta(
+                    session_id=session_id,
+                    session_dir=session["session_dir"],
+                    video_file=session["inference_video_path"],
+                    original_filename=session.get("original_filename") or "video.mp4",
+                    model_name=resolved_model,
+                    browser_video_path=session.get("browser_video_path"),
+                    raw_save_path=session.get("inference_video_path"),
+                )
         
         # Ensure any holding camera inference claims are cleanly released
         from app.ml import app_state
@@ -707,16 +734,15 @@ async def get_last_frame(session_id: str):
                         if f.lower().endswith((".mp4", ".avi", ".mov", ".mkv", ".webm")):
                             potential_videos.append(os.path.join(session_dir, f))
                 try:
-                    from app.core.app_paths import get_desktop_dir
-                    desktop = get_desktop_dir()
-                    archive_base = os.path.join(str(desktop), "inference_results")
-                    if os.path.exists(archive_base):
-                        for today in os.listdir(archive_base):
-                            target = os.path.join(archive_base, today, session_id)
-                            if os.path.exists(target):
-                                for fn in os.listdir(target):
-                                    if fn.lower().endswith((".mp4", ".avi", ".mov", ".mkv", ".webm")):
-                                        potential_videos.append(os.path.join(target, fn))
+                    from app.core.app_paths import get_desktop_dir, get_inference_base_dir
+                    for archive_base in (str(get_inference_base_dir()), os.path.join(str(get_desktop_dir()), "inference_results")):
+                        if os.path.exists(archive_base):
+                            for today in os.listdir(archive_base):
+                                target = os.path.join(archive_base, today, session_id)
+                                if os.path.exists(target):
+                                    for fn in os.listdir(target):
+                                        if fn.lower().endswith((".mp4", ".avi", ".mov", ".mkv", ".webm")):
+                                            potential_videos.append(os.path.join(target, fn))
                 except Exception:
                     pass
 

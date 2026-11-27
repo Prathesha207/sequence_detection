@@ -748,11 +748,11 @@ class VideoInferenceService:
             try:
                 from datetime import datetime
                 import shutil
-                from app.core.app_paths import get_desktop_dir
+                from app.core.app_paths import get_inference_base_dir
 
-                desktop = get_desktop_dir()
+                inf_base = get_inference_base_dir()
                 today_str = datetime.now().strftime("%Y-%m-%d")
-                archive_dir = os.path.join(str(desktop), "inference_results", today_str, session_id)
+                archive_dir = os.path.join(str(inf_base), today_str, session_id)
                 os.makedirs(archive_dir, exist_ok=True)
 
                 if os.path.abspath(session_dir) != os.path.abspath(archive_dir):
@@ -762,7 +762,7 @@ class VideoInferenceService:
                         session = self.sessions.get(session_id)
                         if session and "stats" in session:
                             session["stats"]["output_file"] = dest_video
-                        logger.info(f"[ARCHIVE] Saved annotated video copy to Desktop: {dest_video}")
+                        logger.info(f"[ARCHIVE] Saved annotated video copy to sequence_inference: {dest_video}")
 
                     if results_json_path and os.path.exists(results_json_path):
                         shutil.copy2(results_json_path, archive_dir)
@@ -774,14 +774,14 @@ class VideoInferenceService:
                     session = self.sessions.get(session_id)
                     if session and "stats" in session:
                         session["stats"]["output_file"] = output_path
-                    logger.info(f"[ARCHIVE] Video and artifacts saved directly on Desktop: {session_dir}")
+                    logger.info(f"[ARCHIVE] Video and artifacts saved directly in sequence_inference: {session_dir}")
 
                 session = self.sessions.get(session_id)
                 if session and "stats" in session:
                     session["stats"]["archived_results_dir"] = archive_dir
                 logger.info(f"[ARCHIVE] Successfully finalized inference results in: {archive_dir}")
             except Exception as arch_err:
-                logger.warning(f"[ARCHIVE] Could not finalize inference results to Desktop: {arch_err}")
+                logger.warning(f"[ARCHIVE] Could not finalize inference results in sequence_inference: {arch_err}")
 
         self._io_executor.submit(_do_archive)
 

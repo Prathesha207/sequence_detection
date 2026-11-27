@@ -356,54 +356,89 @@ export const CameraImageAdjustmentsCard: React.FC<CameraImageAdjustmentsCardProp
     }
   };
 
-  // Reset to Calibrated Default Values
-  // Reset to saved database settings
+  // Reset to saved database settings (authoritative from backend /oak/controls/reset)
   const handleResetDefaults = async () => {
     if (controlsLocked) return;
-    const savedExp = normalizeExposureMs(config?.exposure, 16);
-    const savedGain = typeof config?.gain === 'number' ? config.gain : 400;
-    const savedFocus = typeof config?.focus === 'number' && config.focus > 0 ? config.focus : 120;
-    const savedB = typeof config?.brightness === 'number' ? config.brightness : 0;
-    const savedC = typeof config?.contrast === 'number' ? config.contrast : 50;
-    const savedMode = config?.controlMode || 'manual';
 
-    setExposure(savedExp);
-    setGain(savedGain);
-    setFocus(savedFocus);
-    setBrightness(savedB);
-    setContrast(savedC);
-    setMode(savedMode);
-    setHasUnsavedChanges(false);
-    setJustSaved(false);
-
-    onUpdateConfig?.({
-      exposure: savedExp,
-      gain: savedGain,
-      iso: savedGain,
-      focus: savedFocus,
-      brightness: savedB,
-      contrast: savedC,
-      controlMode: savedMode,
-      autoExposure: savedMode === 'auto',
-      autoFocus: savedMode === 'auto',
-    });
+    // Cancel any queued slider dispatch so it cannot overwrite the reset
+    pendingUpdateRef.current = null;
+    if (throttleTimerRef.current) {
+      clearTimeout(throttleTimerRef.current);
+      throttleTimerRef.current = null;
+    }
 
     setSyncStatus('adjusting');
     try {
-      await cameraService.resetCameraControls();
-      setSyncStatus('synced');
-    } catch {
-      scheduleDispatch({
-        reset: true,
-        control_mode: savedMode,
+      const res = await cameraService.resetCameraControls();
+      const s = res?.settings;
+
+      const savedExp = normalizeExposureMs(s?.exposure, 16);
+      const savedGain = typeof s?.gain === 'number' ? s.gain : 400;
+      const savedFocus = typeof s?.focus === 'number' && s.focus > 0 ? s.focus : 120;
+      const savedB = typeof s?.brightness === 'number' ? s.brightness : 0;
+      const savedC = typeof s?.contrast === 'number' ? s.contrast : 50;
+      const savedMode: 'auto' | 'manual' =
+        s?.control_mode === 'auto' || s?.control_mode === 'manual' ? s.control_mode : 'manual';
+
+      setExposure(savedExp);
+      setGain(savedGain);
+      setFocus(savedFocus);
+      setBrightness(savedB);
+      setContrast(savedC);
+      setMode(savedMode);
+      setHasUnsavedChanges(false);
+      setJustSaved(false);
+
+      onUpdateConfig?.({
         exposure: savedExp,
         gain: savedGain,
+        iso: savedGain,
         focus: savedFocus,
         brightness: savedB,
         contrast: savedC,
-        auto_exposure: savedMode === 'auto',
-        auto_focus: savedMode === 'auto',
+        controlMode: savedMode,
+        autoExposure: Boolean(s?.auto_exposure ?? savedMode === 'auto'),
+        autoFocus: Boolean(s?.auto_focus ?? savedMode === 'auto'),
       });
+
+      setSyncStatus('synced');
+      onShowToast?.('info', 'Camera settings reset to saved values');
+    } catch (err: any) {
+      if (err?.response?.status === 409) {
+        onShowToast?.('info', 'Camera controls are locked while recording is active');
+        setSyncStatus('synced');
+        return;
+      }
+
+      // Fallback to calibrated defaults if backend is unreachable
+      const defExp = 16;
+      const defGain = 400;
+      const defFocus = 120;
+      const defB = 0;
+      const defC = 50;
+
+      setExposure(defExp);
+      setGain(defGain);
+      setFocus(defFocus);
+      setBrightness(defB);
+      setContrast(defC);
+      setHasUnsavedChanges(false);
+      setJustSaved(false);
+
+      onUpdateConfig?.({
+        exposure: defExp,
+        gain: defGain,
+        iso: defGain,
+        focus: defFocus,
+        brightness: defB,
+        contrast: defC,
+        controlMode: mode,
+        autoExposure: false,
+        autoFocus: false,
+      });
+
+      setSyncStatus('synced');
+      onShowToast?.('info', 'Reset to calibrated defaults');
     }
   };
 

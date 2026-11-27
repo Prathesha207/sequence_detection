@@ -55,14 +55,14 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             Progress
           </span>
           <div className="flex items-center gap-1 mt-0.5 font-mono">
-            <span className="text-xs sm:text-sm font-extrabold text-[var(--accent-main,#7886C7)]">
+            <span className="text-xs sm:text-sm font-extrabold text-[var(--accent-main)]">
               {doneCount}
             </span>
             <span className="text-xs text-[var(--text-muted)]">/</span>
             <span className="text-xs sm:text-sm font-extrabold text-emerald-600 dark:text-emerald-400">
               {totalSteps}
             </span>
-            <span className="text-[10px] font-bold text-[var(--accent-main,#7886C7)] ml-1">
+            <span className="text-[10px] font-bold text-[var(--accent-main)] ml-1">
               ({progressPercent}%)
             </span>
           </div>
@@ -89,8 +89,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         <div className="h-6 w-[1px] bg-[var(--border-color)]" />
         <div className="flex items-center gap-3 text-xs font-mono">
           <div className="flex items-center gap-1 text-[var(--text-secondary)]">
-            <Activity className="w-3.5 h-3.5 text-[var(--accent-main,#7886C7)]" />
-            <span className="font-bold text-[var(--accent-main,#7886C7)]">{displayFps > 0 ? displayFps.toFixed(1) : (stats.fps || 0).toFixed(1)}</span>
+            <Activity className="w-3.5 h-3.5 text-[var(--accent-main)]" />
+            <span className="font-bold text-[var(--accent-main)]">{displayFps > 0 ? displayFps.toFixed(1) : (stats.fps || 0).toFixed(1)}</span>
             <span className="text-[10px] text-[var(--text-muted)]">FPS</span>
           </div>
 

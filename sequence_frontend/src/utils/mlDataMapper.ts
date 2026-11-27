@@ -80,7 +80,12 @@ export const mapBackendResultToSOPSteps = (data: any): {
 
   const rawSteps = Array.isArray(data.steps) ? data.steps : [];
   const sequence: number[] = Array.isArray(data.sequence) ? data.sequence : [];
-  const doing: number | null = data.doing != null ? Number(data.doing) : null;
+  const doingArr: number[] = Array.isArray(data.doing)
+    ? data.doing.map(Number)
+    : data.doing != null
+      ? [Number(data.doing)]
+      : [];
+  const doing: number | null = doingArr.length > 0 ? doingArr[0] : null;
   const isAnomaly = data.is_anomaly_frame === true || data.status === 'ANOMALY';
   const verdict = data.verdict === 'NORMAL' || data.verdict === 'ANOMALY' ? data.verdict : null;
 
@@ -90,37 +95,38 @@ export const mapBackendResultToSOPSteps = (data: any): {
     const label = String(s.label || `Step ${stepId}`);
     const rawStatus = String(s.status || '').toLowerCase();
 
-    const isDone = rawStatus === 'done' || sequence.includes(stepId);
-    const isDoing = doing === stepId || rawStatus === 'doing';
     const posInSeq = sequence.indexOf(stepId);
+    const isDoneInSeq = posInSeq !== -1;
+    const expectedIndex = stepId - 1;
+    const isDoing = doingArr.includes(stepId) || rawStatus === 'doing';
 
     let st: SOPStep['st'] = 'waiting';
     let note = '';
 
-    if (isDone) {
-      // Check if done in order
-      const expectedIndex = stepId - 1;
-      const wasOutOfOrder = posInSeq !== -1 && posInSeq !== expectedIndex;
-      if (wasOutOfOrder) {
-        st = 'ooo';
-        note = posInSeq < expectedIndex ? 'Done before an earlier step' : 'Done after a later step';
-      } else {
-        st = 'done';
-      }
+    if (rawStatus === 'out_of_order' || rawStatus === 'ooo' || (isDoneInSeq && posInSeq !== expectedIndex)) {
+      st = 'ooo';
+      note = isDoneInSeq && posInSeq < expectedIndex ? 'Done before an earlier step' : 'Done after a later step';
+    } else if (rawStatus === 'taken_back') {
+      st = 'taken_back';
+      note = 'Action taken back / reverted';
+    } else if (rawStatus === 'done' || isDoneInSeq) {
+      st = 'done';
+    } else if (rawStatus === 'confirming') {
+      st = 'confirming';
+    } else if (rawStatus === 'warning') {
+      st = 'warning';
     } else if (isDoing) {
       st = 'doing';
-    } else if (rawStatus === 'taken_back') {
-      st = 'ooo';
-      note = 'Action taken back / reverted';
     }
 
     return {
       id: stepId,
       label,
       st,
-      at: s.done_at_frame ? Number((s.done_at_frame / 30).toFixed(1)) : null,
-      took: null,
-      det: s.confidence ? Math.round(s.confidence * 100) : 98,
+      at: s.t != null ? Number(s.t) : (s.done_at_frame ? Number((s.done_at_frame / 30).toFixed(1)) : null),
+      took: s.took != null ? Number(s.took) : null,
+      det: typeof s.detected === 'number' ? s.detected : (s.confidence ? Math.round(s.confidence * 100) : null),
+      taken: Boolean(s.taken),
       note: s.note || note,
     };
   });

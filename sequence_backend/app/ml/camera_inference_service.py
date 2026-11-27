@@ -217,6 +217,9 @@ def run_inference(frame, session_id: str,
     stats = dict(fr.stats)
     stats["session_id"] = session_id
     stats["original_filename"] = session.get("original_filename")
+    if session.get("model_name"):
+        stats["model_name"] = session["model_name"]
+        stats["active_model"] = session["model_name"]
     session["last_stats"] = stats
     return stats, annotated_frame
 

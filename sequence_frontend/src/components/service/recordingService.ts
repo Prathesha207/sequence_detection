@@ -14,6 +14,9 @@ export interface StopRecordingResponse {
   filename?: string;
   duration?: number;
   frames?: number;
+  file_size?: number;
+  width?: number;
+  height?: number;
   stream_url?: string;
   message?: string;
 }
